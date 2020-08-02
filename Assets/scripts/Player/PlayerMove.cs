@@ -7,6 +7,7 @@ public class PlayerMove : MonoBehaviour
     // Start is called before the first frame update
     public float moveSpeed;
     public LayerMask  solidObjectsLayer;
+    public LayerMask grass;
     private bool isMoving;
 
     private Vector2 input;
@@ -53,6 +54,7 @@ public class PlayerMove : MonoBehaviour
         }
         transform.position= targetPos;
         isMoving=false;
+        CheckForPokemons();
     }
 
 
@@ -62,5 +64,13 @@ public class PlayerMove : MonoBehaviour
             return false;
         }
         return true;
+    }
+
+    private void CheckForPokemons(){
+        if(Physics2D.OverlapCircle(transform.position,0.2f,grass)!=null){
+            if(Random.Range(1,101)<=10){
+                    Debug.Log("Pokemon Found");
+            }
+        }
     }
 }
