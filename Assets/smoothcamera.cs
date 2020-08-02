@@ -19,8 +19,6 @@ public class smoothcamera : MonoBehaviour
     public Vector3 offset;
     void LateUpdate()
     {
-        float x = Mathf.Clamp(target.position.x,xMin,xMax);
-        float y = Mathf.Clamp(target.position.x,yMin,yMax);
-        t.position=new Vector3(x,y,t.position.z);
+        t.position=new Vector3(target.position.x,target.position.y,t.position.z);
     }
 }

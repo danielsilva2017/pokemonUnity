@@ -68,6 +68,7 @@ public class PlayerMove : MonoBehaviour
 
     private void CheckForPokemons(){
         if(Physics2D.OverlapCircle(transform.position,0.2f,grass)!=null){
+            Debug.Log("xdds");
             if(Random.Range(1,101)<=10){
                     Debug.Log("Pokemon Found");
             }
