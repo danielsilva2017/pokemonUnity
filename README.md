@@ -7,7 +7,7 @@ Lets start simple
 Basic Mechanics 
 
 - [x] Basic controls and animations;
-- [ ] Colisions;
+- [x] Colisions;
 - [ ] Enter in a place;
 - [ ] Talk to another player and/or be detected to start a battle;
 
