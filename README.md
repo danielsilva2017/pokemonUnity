@@ -10,6 +10,8 @@ Basic Mechanics
 - [x] Colisions;
 - [ ] Enter in a place;
 - [ ] Talk to another player and/or be detected to start a battle;
+- [x] find encounter in grass;
+- [x] camera follows player;
 
 
 Battle
