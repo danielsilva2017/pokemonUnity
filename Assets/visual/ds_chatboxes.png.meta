@@ -1,0 +1,584 @@
+fileFormatVersion: 2
+guid: 7cb9625845b34c54f94c3b4f10b3ad4d
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 1286014239169217356
+    second: ds_chatboxes_0
+  - first:
+      213: -2055400776264207969
+    second: ds_chatboxes_1
+  - first:
+      213: -6488334700907165881
+    second: ds_chatboxes_2
+  - first:
+      213: -8677639657553874000
+    second: ds_chatboxes_3
+  - first:
+      213: 7532584147338804304
+    second: ds_chatboxes_4
+  - first:
+      213: -6709588371951234494
+    second: ds_chatboxes_5
+  - first:
+      213: -903982049278969878
+    second: ds_chatboxes_6
+  - first:
+      213: 1366713163705238908
+    second: ds_chatboxes_7
+  - first:
+      213: 8705004393330363767
+    second: ds_chatboxes_8
+  - first:
+      213: 8913544804852400638
+    second: ds_chatboxes_9
+  - first:
+      213: 6346304866390446173
+    second: ds_chatboxes_10
+  - first:
+      213: 6117910566988649145
+    second: ds_chatboxes_11
+  - first:
+      213: -5270035008132850158
+    second: ds_chatboxes_12
+  - first:
+      213: 7237918597149770755
+    second: ds_chatboxes_13
+  - first:
+      213: -5127160925427101738
+    second: ds_chatboxes_14
+  - first:
+      213: 8721166445700844604
+    second: ds_chatboxes_15
+  - first:
+      213: -7303823064654500899
+    second: ds_chatboxes_16
+  - first:
+      213: -4819883822118988758
+    second: ds_chatboxes_17
+  - first:
+      213: 6514849358440824101
+    second: ds_chatboxes_18
+  - first:
+      213: 4462952819344014616
+    second: ds_chatboxes_19
+  externalObjects: {}
+  serializedVersion: 11
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: -1
+    aniso: -1
+    mipBias: -100
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  applyGammaDecoding: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 3
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: ds_chatboxes_0
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 492
+        width: 252
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c4386cd0327d8d110800000000000000
+      internalID: 1286014239169217356
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_1
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 492
+        width: 252
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: f91b5bb42efb973e0800000000000000
+      internalID: -2055400776264207969
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_2
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 445
+        width: 252
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 747869857fdc4f5a0800000000000000
+      internalID: -6488334700907165881
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_3
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 445
+        width: 253
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 0b3b8a225b4d29780800000000000000
+      internalID: -8677639657553874000
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_4
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 398
+        width: 252
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 05c3ed66f5d198860800000000000000
+      internalID: 7532584147338804304
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_5
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 398
+        width: 253
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 24251c4bce0c2e2a0800000000000000
+      internalID: -6709588371951234494
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_6
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 351
+        width: 252
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ae7b56d9d196473f0800000000000000
+      internalID: -903982049278969878
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_7
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 351
+        width: 250
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c754088916a87f210800000000000000
+      internalID: 1366713163705238908
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_8
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 304
+        width: 252
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 77dcba8ef536ec870800000000000000
+      internalID: 8705004393330363767
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_9
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 304
+        width: 250
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ef181c626c543bb70800000000000000
+      internalID: 8913544804852400638
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_10
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 257
+        width: 252
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: d50198dd6aa921850800000000000000
+      internalID: 6346304866390446173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_11
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 257
+        width: 252
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 9b297f02f3f27e450800000000000000
+      internalID: 6117910566988649145
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_12
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 210
+        width: 252
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 21e5e5af4131dd6b0800000000000000
+      internalID: -5270035008132850158
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_13
+      rect:
+        serializedVersion: 2
+        x: 255
+        y: 210
+        width: 251
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 3044e40bd90427460800000000000000
+      internalID: 7237918597149770755
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_14
+      rect:
+        serializedVersion: 2
+        x: 2
+        y: 165
+        width: 254
+        height: 44
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 6df87ad9d4aa8d8b0800000000000000
+      internalID: -5127160925427101738
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_15
+      rect:
+        serializedVersion: 2
+        x: 257
+        y: 163
+        width: 254
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: c3c0e07fcaec70970800000000000000
+      internalID: 8721166445700844604
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_16
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 116
+        width: 254
+        height: 48
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: ddba6f8be9b93aa90800000000000000
+      internalID: -7303823064654500899
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_17
+      rect:
+        serializedVersion: 2
+        x: 257
+        y: 116
+        width: 252
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: a2412fb53355c1db0800000000000000
+      internalID: -4819883822118988758
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_18
+      rect:
+        serializedVersion: 2
+        x: 1
+        y: 69
+        width: 254
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 52dfb0f69f4696a50800000000000000
+      internalID: 6514849358440824101
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: ds_chatboxes_19
+      rect:
+        serializedVersion: 2
+        x: 257
+        y: 69
+        width: 254
+        height: 46
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      outline: []
+      physicsShape: []
+      tessellationDetail: 0
+      bones: []
+      spriteID: 81df35681f79fed30800000000000000
+      internalID: 4462952819344014616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    physicsShape: []
+    bones: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+  spritePackingTag: 
+  pSDRemoveMatte: 0
+  pSDShowRemoveMatteOption: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
