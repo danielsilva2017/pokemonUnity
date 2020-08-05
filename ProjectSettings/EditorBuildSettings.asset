@@ -9,9 +9,12 @@ EditorBuildSettings:
     path: Assets/Scenes/Menu.unity
     guid: 2cda990e2423bbf4892e6590ba056729
   - enabled: 0
-    path: Assets/Scenes/Mapa.unity
+    path: 
     guid: 0c3c9e8f385719c49a885c7f5132c1b3
   - enabled: 1
     path: Assets/Scenes/Map.unity
     guid: 0e1859e03e4bc344ca2519a3b19d28de
+  - enabled: 1
+    path: Assets/Scenes/SelectPokemon.unity
+    guid: 6f54ff3d7eaad3043972e60e8e71a7ca
   m_configObjects: {}

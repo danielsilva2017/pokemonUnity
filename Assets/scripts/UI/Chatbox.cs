@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,19 +13,19 @@ public class Chatbox : MonoBehaviour
     private Text[] textObjects; // chatbox can have up to 2 lines of text
     private GameObject canvas;
     private string[] lines;
-    private int maxCharsPerLine = 30;
-    private int framesPerChar = 10;
+    private readonly int maxCharsPerLine = 30;
+    private readonly int framesPerChar = 10;
     private bool startShowingText;
     private bool isWritingText;
 
     // Start is called before the first frame update
     void Start()
     {
-        this.spriteRenderer = this.GetComponent<SpriteRenderer>();
-        this.spriteRenderer.enabled = false;
-        this.textObjects = new Text[2];
-        this.startShowingText = false;
-        this.isWritingText = true;
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        spriteRenderer.enabled = false;
+        textObjects = new Text[2];
+        startShowingText = false;
+        isWritingText = true;
     }
 
     // Update is called once per frame
@@ -33,7 +34,7 @@ public class Chatbox : MonoBehaviour
         if (startShowingText)
         {
             StartCoroutine(PrintChars());
-            this.startShowingText = false;
+            startShowingText = false;
         }
     }
 
@@ -61,13 +62,15 @@ public class Chatbox : MonoBehaviour
 
     public void Show()
     {
-        this.spriteRenderer.enabled = true;
+        spriteRenderer.enabled = true;
 
         transform.position = screenPosition();
 
         // Create Canvas GameObject.
-        this.canvas = new GameObject();
-        this.canvas.name = "Canvas";
+        this.canvas = new GameObject
+        {
+            name = "Canvas"
+        };
         this.canvas.AddComponent<Canvas>();
         this.canvas.AddComponent<CanvasScaler>();
         this.canvas.AddComponent<GraphicRaycaster>();
@@ -77,62 +80,69 @@ public class Chatbox : MonoBehaviour
         canvas = this.canvas.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
-        for (var i=0; i < this.textObjects.Length; i++) {
+        for (var i=0; i < textObjects.Length; i++) {
             // Create the Text GameObject.
             GameObject textHolder = new GameObject();
             textHolder.transform.parent = this.canvas.transform;
-            this.textObjects[i] = textHolder.AddComponent<Text>();
+            textObjects[i] = textHolder.AddComponent<Text>();
 
             // Set Text component properties.
-            this.textObjects[i].font = font;
-            this.textObjects[i].color = Color.black;
-            this.textObjects[i].fontSize = 15;
-            this.textObjects[i].alignment = TextAnchor.MiddleLeft;
+            textObjects[i].font = font;
+            textObjects[i].color = Color.black;
+            textObjects[i].fontSize = 15;
+            textObjects[i].alignment = TextAnchor.MiddleLeft;
 
             // Provide Text position and size using RectTransform.
             RectTransform rectTransform;
-            rectTransform = this.textObjects[i].GetComponent<RectTransform>();
+            rectTransform = textObjects[i].GetComponent<RectTransform>();
             // position relative to player (x,y,z)
-            rectTransform.localPosition = new Vector3(108, -82 - 20*i, 0);
+            rectTransform.localPosition = new Vector3(108, -82 - 20 * i, 0);
             rectTransform.sizeDelta = new Vector2(500, 200);
+            // expected resolution: 457 x 257
         }
+    }
+
+    public void ShowTextSilent(string chatText)
+    {
+        lines = getTextLines(chatText);
+        startShowingText = true;
     }
 
     public void ShowText(string chatText)
     {
-        this.audioSource.Play();
-        this.lines = getTextLines(chatText);
-        this.startShowingText = true;
+        audioSource.Play();
+        lines = getTextLines(chatText);
+        startShowingText = true;
     }
 
     public void Hide()
     {
         Destroy(canvas);
-        this.spriteRenderer.enabled = false;
+        spriteRenderer.enabled = false;
     }
 
     IEnumerator PrintChars()
     {
-        this.isWritingText = true;
+        isWritingText = true;
 
         //clear this line
-        this.textObjects[1].text = "";
+        textObjects[1].text = "";
 
-        for (var line=0; line<this.lines.Length; line++)
+        for (var line=0; line<lines.Length; line++)
         {
-            var maxLength = this.lines[line].Length * this.framesPerChar;
+            var maxLength = lines[line].Length * framesPerChar;
             for (var i=1; i<=maxLength; i++)
             {
-                if (i % this.framesPerChar == 0) this.textObjects[line].text = this.lines[line].Substring(0, i/this.framesPerChar);
+                if (i % framesPerChar == 0) textObjects[line].text = lines[line].Substring(0, i/framesPerChar);
                 yield return null;
             }          
         }
 
-        this.isWritingText = false;
+        isWritingText = false;
     }
 
-    public bool isBusy()
+    public bool IsBusy()
     {
-        return this.isWritingText;
+        return isWritingText;
     }
 }

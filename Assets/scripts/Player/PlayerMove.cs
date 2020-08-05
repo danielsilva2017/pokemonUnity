@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerMove : MonoBehaviour
@@ -13,7 +12,6 @@ public class PlayerMove : MonoBehaviour
 
     private bool isMoving;
     private bool isRunning;
-    private bool isInteracting;
     private bool isInteractionFinished; // used by npc to signal dialogue is over
     private Direction direction;
     private GameObject interactable;
@@ -29,9 +27,8 @@ public class PlayerMove : MonoBehaviour
 
     void Start()
     {
-        this.direction = Direction.DOWN;
-        this.isInteracting = false;
-        this.isInteractionFinished = true;
+        direction = Direction.DOWN;
+        isInteractionFinished = true;
     }
 
     private void Awake(){
@@ -40,14 +37,13 @@ public class PlayerMove : MonoBehaviour
 
     private void Update(){
         if (!isInteractionFinished) return; //drop input
-        else isInteracting = false;
 
         if(!isMoving){
 
             //interact with something if it exists
             if (Input.GetKeyDown(KeyCode.Z) && interactable != null)
             {
-                interact();
+                Interact();
                 return;
             }
 
@@ -74,7 +70,7 @@ public class PlayerMove : MonoBehaviour
                 var targetPos = transform.position;
                 targetPos.x += input.x;
                 targetPos.y += input.y;
-                if(isWalkable(targetPos)){
+                if(IsWalkable(targetPos)){
                     StartCoroutine(Move(targetPos));
                 }
                 
@@ -87,7 +83,6 @@ public class PlayerMove : MonoBehaviour
         else if (Input.GetKeyUp(KeyCode.X))
             isRunning = false;
 
-        Debug.Log(">"+ isRunning);
         animator.SetBool("isRunning", isRunning);
         animator.SetBool("isMoving", isMoving);
     }
@@ -111,7 +106,7 @@ public class PlayerMove : MonoBehaviour
 
 
     // checks if the target Pos contains objects with SolidObjectsLayer, 0.2f is the offset radius
-    private bool isWalkable(Vector3 targetPos){
+    private bool IsWalkable(Vector3 targetPos){
         if(Physics2D.OverlapCircle(targetPos,0.2f,solidObjectsLayer)!=null){
             return false;
         }
@@ -120,16 +115,14 @@ public class PlayerMove : MonoBehaviour
 
     private void CheckForPokemons(){
         if(Physics2D.OverlapCircle(transform.position,0.2f,grass)!=null){
-            Debug.Log("xdds");
             if(UnityEngine.Random.Range(1,101)<=10){
                     Debug.Log("Pokemon Found");
             }
         }
     }
 
-    private void interact()
+    private void Interact()
     {
-        isInteracting = true;
         isInteractionFinished = false;
 
         switch (interactable.tag)
@@ -141,10 +134,10 @@ public class PlayerMove : MonoBehaviour
         
     }
 
-    public void endInteraction()
+    public void EndInteraction()
     {
-        if (!this.audioSource.isPlaying) this.audioSource.Play();
-        this.isInteractionFinished = true;
+        if (!audioSource.isPlaying) audioSource.Play();
+        isInteractionFinished = true;
     }
 
     void OnTriggerStay2D(Collider2D other)

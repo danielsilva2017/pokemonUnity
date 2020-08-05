@@ -1,69 +1,106 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public abstract class NPC : MonoBehaviour
 {
-    protected string Name { get; set; }
+    protected string characterName;
     protected PlayerMove player;
     protected bool isInteracting;
+    protected Behaviour behaviour;
+    protected Pokemon[] pokemons;
 
     private Chatbox chatbox;
     private string[] dialogue;
     private string next;
     private int dialogueIndex;
 
-    public NPC(string name, string[] dialogue)
+    public enum Behaviour
     {
-        this.Name = name;
+        STARTER, BATTLE
+    }
+
+    public NPC(string name, string[] dialogue, Behaviour behaviour)
+    {
+        characterName = name;
         this.dialogue = dialogue;
-        this.dialogueIndex = 0;
-        this.isInteracting = false;
+        this.behaviour = behaviour;
+        dialogueIndex = 0;
+        isInteracting = false;
+    }
+
+    public NPC(string name, string[] dialogue, Pokemon[] pokemons, Behaviour behaviour)
+    {
+        characterName = name;
+        this.dialogue = dialogue;
+        this.behaviour = behaviour;
+        this.pokemons = pokemons;
+        dialogueIndex = 0;
+        isInteracting = false;
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        this.chatbox = GameObject.Find("Chatbox").GetComponent<Chatbox>();
+        chatbox = GameObject.Find("Chatbox").GetComponent<Chatbox>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!this.isInteracting) return;
+        if (!isInteracting) return;
 
         if (Input.GetKeyDown(KeyCode.Z))
         {
 
             // drop input
-            if (this.chatbox.isBusy()) return;
+            if (chatbox.IsBusy()) return;
 
-            if ((next = nextDialogue()) != null)
+            if ((next = NextDialogue()) != null)
             {
-                this.chatbox.ShowText(next);
+                chatbox.ShowText(next);
             }
             else
             {
-                this.isInteracting = false;
-                this.dialogueIndex = 0;
-                this.player.endInteraction();
-                this.chatbox.Hide();
+                isInteracting = false;
+                dialogueIndex = 0;
+                player.EndInteraction();
+                chatbox.Hide();
+                DoAction();
             }
         }
     }
 
-    private string nextDialogue()
+    private string NextDialogue()
     {
-        return dialogueIndex < dialogue.Length ? dialogue[this.dialogueIndex++] : null;
+        return dialogueIndex < dialogue.Length ? dialogue[dialogueIndex++] : null;
     }
 
     public void Interact(PlayerMove player)
     {
         this.player = player;
-        this.chatbox.Show();
-        this.chatbox.ShowText(nextDialogue());
-        this.isInteracting = true;
+        chatbox.Show();
+        chatbox.ShowText(NextDialogue());
+        isInteracting = true;
     }
 
+    private void DoAction()
+    {
+        switch (behaviour)
+        {
+            case Behaviour.STARTER:
+                SceneManager.LoadScene(2);
+                break;
+            case Behaviour.BATTLE:
+                if (pokemons != null) BeginBattle();
+                break;
+        }
+    }
+
+    private void BeginBattle()
+    {
+        
+    }
     
 }
