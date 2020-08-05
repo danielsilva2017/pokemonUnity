@@ -9,9 +9,10 @@ public class PlayerMove : MonoBehaviour
     public float moveSpeed;
     public LayerMask solidObjectsLayer;
     public LayerMask grass;
-    public AudioSource audio;
+    public AudioSource audioSource;
 
     private bool isMoving;
+    private bool isRunning;
     private bool isInteracting;
     private bool isInteractionFinished; // used by npc to signal dialogue is over
     private Direction direction;
@@ -26,30 +27,28 @@ public class PlayerMove : MonoBehaviour
         UP, DOWN, LEFT, RIGHT
     }
 
+    void Start()
+    {
+        this.direction = Direction.DOWN;
+        this.isInteracting = false;
+        this.isInteractionFinished = true;
+    }
+
     private void Awake(){
         animator = GetComponent<Animator>();
     }
 
     private void Update(){
-        if (isInteracting && !isInteractionFinished)
-        {
-            return;
-        }
+        if (!isInteractionFinished) return; //drop input
+        else isInteracting = false;
 
         if(!isMoving){
 
             //interact with something if it exists
             if (Input.GetKeyDown(KeyCode.Z) && interactable != null)
             {
-                if (isInteractionFinished && isInteracting)
-                {
-                    isInteracting = false;
-                }
-                else
-                {
-                    interact();
-                    return;
-                }  
+                interact();
+                return;
             }
 
             input.x=Input.GetAxisRaw("Horizontal");
@@ -58,11 +57,13 @@ public class PlayerMove : MonoBehaviour
             if (input.x != 0)
             {
                 input.y = 0;
+                interactable = null; //clear interaction; will be set again by trigger if one is available
                 direction = input.x < 0 ? Direction.LEFT : Direction.RIGHT;
             }
             else if (input.y != 0)
             {
                 input.x = 0;
+                interactable = null; //clear interaction; will be set again by trigger if one is available
                 direction = input.y < 0 ? Direction.DOWN : Direction.UP;
             }
 
@@ -80,20 +81,31 @@ public class PlayerMove : MonoBehaviour
             }
         }
 
-        //animator.SetBool("isMoving",isMoving);
+        //only run while pressing key
+        if (Input.GetKeyDown(KeyCode.X))
+            isRunning = true;
+        else if (Input.GetKeyUp(KeyCode.X))
+            isRunning = false;
+
+        Debug.Log(">"+ isRunning);
+        animator.SetBool("isRunning", isRunning);
+        animator.SetBool("isMoving", isMoving);
     }
     //Inumerator is used to do something over a period of time -  move current to target pos over a period of time
 
     IEnumerator Move(Vector3 targetPos){
-        isMoving=true;
-        while((targetPos - transform.position).sqrMagnitude > Mathf.Epsilon)
+        isMoving = true;
+        while ((targetPos - transform.position).sqrMagnitude > Mathf.Epsilon)
         {
-            transform.position = Vector3.MoveTowards(transform.position,targetPos,moveSpeed* Time.deltaTime);
-            
+            transform.position = Vector3.MoveTowards(
+                transform.position, 
+                targetPos,
+                moveSpeed * (isRunning ? 2 : 1) * Time.deltaTime
+            ); 
             yield return null;
         }
-        transform.position= targetPos;
-        isMoving=false;
+        transform.position = targetPos;
+        isMoving = false;
         CheckForPokemons();
     }
 
@@ -131,7 +143,7 @@ public class PlayerMove : MonoBehaviour
 
     public void endInteraction()
     {
-        this.audio.Play();
+        if (!this.audioSource.isPlaying) this.audioSource.Play();
         this.isInteractionFinished = true;
     }
 
@@ -145,7 +157,18 @@ public class PlayerMove : MonoBehaviour
             // correct errors
             var xdiff = (Math.Abs(selfPos.x - otherPos.x) >= 1) ? selfPos.x : otherPos.x;
             var ydiff = (Math.Abs(selfPos.y - otherPos.y) >= 1) ? selfPos.y : otherPos.y;
-            if (CollisionFrom(new Vector3(xdiff, ydiff, 0), otherPos) == direction)
+
+            var location = CollisionFrom(new Vector3(xdiff, ydiff, 0), otherPos);
+
+            // use z-index for correct sprite priority
+            other.gameObject.transform.position = new Vector3(
+                otherPos.x,
+                otherPos.y,
+                location == Direction.DOWN ? 1 : 3
+            );
+
+            // directly facing the NPC
+            if (location == direction)
                 interactable = other.gameObject;
         }
     }

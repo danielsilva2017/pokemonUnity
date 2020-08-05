@@ -34,11 +34,14 @@ public abstract class NPC : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Z))
         {
+
             // drop input
             if (this.chatbox.isBusy()) return;
 
             if ((next = nextDialogue()) != null)
+            {
                 this.chatbox.ShowText(next);
+            }
             else
             {
                 this.isInteracting = false;

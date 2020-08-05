@@ -6,7 +6,7 @@ using UnityEngine.UI;
 public class Chatbox : MonoBehaviour
 {
     public Font font;
-    public AudioSource audio;
+    public AudioSource audioSource;
 
     private SpriteRenderer spriteRenderer;
     private Text[] textObjects; // chatbox can have up to 2 lines of text
@@ -100,7 +100,7 @@ public class Chatbox : MonoBehaviour
 
     public void ShowText(string chatText)
     {
-        this.audio.Play();
+        this.audioSource.Play();
         this.lines = getTextLines(chatText);
         this.startShowingText = true;
     }
