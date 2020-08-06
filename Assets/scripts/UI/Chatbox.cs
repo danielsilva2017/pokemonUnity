@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,11 +9,11 @@ public class Chatbox : MonoBehaviour
     public AudioSource audioSource;
 
     private SpriteRenderer spriteRenderer;
-    private Text[] textObjects; // chatbox can have up to 2 lines of text
+    private Text textObject;
     private GameObject canvasObject;
-    private string[] lines;
+    private string textToDisplay;
     private readonly int maxCharsPerLine = 30;
-    private readonly int framesPerChar = 10;
+    private readonly int framesPerChar = 2;
     private bool startShowingText;
     private bool isWritingText;
 
@@ -24,7 +22,6 @@ public class Chatbox : MonoBehaviour
     {
         spriteRenderer = GetComponent<SpriteRenderer>();
         spriteRenderer.enabled = false;
-        textObjects = new Text[2];
         startShowingText = false;
         isWritingText = true;
     }
@@ -45,26 +42,6 @@ public class Chatbox : MonoBehaviour
         return new Vector3(pos.x, pos.y, 4);
     }
 
-    private string[] GetTextLines(string text)
-    { 
-        var taglessText = Regex.Replace(text, "(<.*?>|</.*>)", "");
-
-        if (text.Length <= maxCharsPerLine) return new string[] { text };
-
-        //tags hopefully do not have spaces inside them
-        string[] words = text.Split(' ');
-        string[] taglessWords = taglessText.Split(' ');
-
-        int newlineIndex = taglessWords[0].Length;
-        for (var i=1; i<taglessWords.Length; i++)
-        {
-            if (newlineIndex + taglessWords[i].Length + 1 > maxCharsPerLine) break;
-            else newlineIndex += words[i].Length + 1;
-        }
-
-        return new string[] { text.Substring(0, newlineIndex), text.Substring(newlineIndex).TrimStart(' ') };
-    }
-
     public void Show()
     {
         spriteRenderer.enabled = true;
@@ -79,46 +56,46 @@ public class Chatbox : MonoBehaviour
         canvasObject.AddComponent<Canvas>();
         canvasObject.AddComponent<CanvasScaler>();
         canvasObject.AddComponent<GraphicRaycaster>();
+        canvasObject.transform.position = new Vector3(0, 0, 0);
 
         var scaler = canvasObject.GetComponent<CanvasScaler>();
         scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+        //scaler.referenceResolution = new Vector2(457, 257);
 
         // Get canvas from the GameObject.
         var canvas = canvasObject.GetComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
 
-        for (var i=0; i < textObjects.Length; i++) {
-            // Create the Text GameObject.
-            GameObject textHolder = new GameObject();
-            textHolder.transform.parent = canvasObject.transform;
-            textObjects[i] = textHolder.AddComponent<Text>();
+        // Create the Text GameObject.
+        GameObject textHolder = new GameObject();
+        textHolder.transform.parent = canvasObject.transform;
+        textObject = textHolder.AddComponent<Text>();
 
-            // Set Text component properties.
-            textObjects[i].font = font;
-            textObjects[i].color = Color.black;
-            textObjects[i].fontSize = 25;
-            textObjects[i].alignment = TextAnchor.MiddleLeft;
+        // Set Text component properties.
+        textObject.font = font;
+        textObject.color = Color.black;
+        textObject.fontSize = 25;
+        textObject.alignment = TextAnchor.UpperLeft;
+        textObject.lineSpacing = 1.1f;
 
-            // Provide Text position and size using RectTransform.
-            RectTransform rectTransform;
-            rectTransform = textObjects[i].GetComponent<RectTransform>();
-            // position relative to player (x,y,z)
-            rectTransform.localPosition = new Vector3(0, -155 - 35*i, 0);
-            rectTransform.sizeDelta = new Vector2(500, 200);
-            // expected resolution: 457 x 257
-        }
+        // Provide Text position and size using RectTransform.
+        RectTransform rectTransform;
+        rectTransform = textObject.GetComponent<RectTransform>();
+        // i dont care anymore
+        rectTransform.localPosition = new Vector3(0, (float) (-77 * Math.Log10(1.2 * (Screen.height - 117))), 0);
+        rectTransform.sizeDelta = new Vector2(480,80);
     }
 
     public void ShowTextSilent(string chatText)
     {
-        lines = GetTextLines(chatText);
+        textToDisplay = chatText;
         startShowingText = true;
     }
 
     public void ShowText(string chatText)
     {
         audioSource.Play();
-        lines = GetTextLines(chatText);
+        textToDisplay = chatText;
         startShowingText = true;
     }
 
@@ -135,34 +112,30 @@ public class Chatbox : MonoBehaviour
         var tagOpenFound = false;
         var tagsClosedFound = 0;
 
-        //clear this line
-        textObjects[1].text = "";
+        //clear
+        textObject.text = "";
 
-        for (var line=0; line<lines.Length; line++)
+        var maxLength = textToDisplay.Length * framesPerChar;
+        for (var i=1; i<maxLength; i++)
         {
-            Debug.Log(line);
-            var maxLength = lines[line].Length * framesPerChar;
-            for (var i=1; i<maxLength; i++)
+            var actualIndex = i / framesPerChar;
+
+            //colored text "support"
+            if (actualIndex != lastCheckedIndex && textToDisplay[actualIndex] == '<') tagOpenFound = true;
+            else if (actualIndex != lastCheckedIndex && textToDisplay[actualIndex] == '>') tagsClosedFound++;
+
+            lastCheckedIndex = actualIndex;
+
+            if (tagOpenFound && tagsClosedFound < 2) continue;
+            else
             {
-                var actualIndex = i / framesPerChar;
+                tagOpenFound = false;
+                tagsClosedFound = 0;
+            }
 
-                //colored text "support"
-                if (actualIndex != lastCheckedIndex && lines[line][actualIndex] == '<') tagOpenFound = true;
-                else if (actualIndex != lastCheckedIndex && lines[line][actualIndex] == '>') tagsClosedFound++;
-
-                lastCheckedIndex = actualIndex;
-
-                if (tagOpenFound && tagsClosedFound < 2) continue;
-                else
-                {
-                    tagOpenFound = false;
-                    tagsClosedFound = 0;
-                }
-
-                if (i % framesPerChar == 0) textObjects[line].text = lines[line].Substring(0, actualIndex+1);
-                yield return null;
-            }          
-        }
+            if (i % framesPerChar == 0) textObject.text = textToDisplay.Substring(0, actualIndex+1);
+            yield return null;
+        }          
 
         isWritingText = false;
     }

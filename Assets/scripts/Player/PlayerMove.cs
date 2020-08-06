@@ -27,6 +27,7 @@ public class PlayerMove : MonoBehaviour
 
     void Start()
     {
+        Application.targetFrameRate = 60;
         direction = Direction.DOWN;
         isInteractionFinished = true;
     }
@@ -39,7 +40,6 @@ public class PlayerMove : MonoBehaviour
         if (!isInteractionFinished) return; //drop input
 
         if(!isMoving){
-
             //interact with something if it exists
             if (Input.GetKeyDown(KeyCode.Z) && interactable != null)
             {
@@ -64,7 +64,6 @@ public class PlayerMove : MonoBehaviour
             }
 
             if(input != Vector2.zero){
-               
                 animator.SetFloat("moveX",input.x);
                 animator.SetFloat("moveY",input.y);
                 var targetPos = transform.position;
@@ -130,6 +129,9 @@ public class PlayerMove : MonoBehaviour
             case "NPC":
                 interactable.GetComponent<NPC>().Interact(this);
                 break;
+            case "Item":
+                interactable.GetComponent<Item>().Collect(this);
+                break;
         }
         
     }
@@ -138,12 +140,14 @@ public class PlayerMove : MonoBehaviour
     {
         if (!audioSource.isPlaying) audioSource.Play();
         isInteractionFinished = true;
+        // required due to the order in which update() functions are run
+        if (interactable.tag == "Item") interactable = null;
     }
 
     void OnTriggerStay2D(Collider2D other)
     {
-        if (other.gameObject.tag == "NPC")
-        {
+        /*if (other.gameObject.tag == "NPC")
+        {*/
             var selfPos = transform.position;
             var otherPos = other.gameObject.transform.position;
 
@@ -163,7 +167,7 @@ public class PlayerMove : MonoBehaviour
             // directly facing the NPC
             if (location == direction)
                 interactable = other.gameObject;
-        }
+        //}
     }
 
     private Direction? CollisionFrom(Vector3 self, Vector3 other)
