@@ -17,4 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SelectPokemon.unity
     guid: 6f54ff3d7eaad3043972e60e8e71a7ca
+  - enabled: 1
+    path: Assets/Scenes/Battle.unity
+    guid: 7f99cb8af87063743b6c4b000171d462
   m_configObjects: {}
