@@ -17,6 +17,7 @@ public class PokeCenter : MonoBehaviour
         
     }
     void OnTriggerEnter2D(){
+        Debug.Log("xd");
         SceneManager.LoadScene(4);
     }
 }
