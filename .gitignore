@@ -1,5 +1,5 @@
 .git/
-obj/Debug/
+obj/
 Temp/
 
 # Created by https://www.toptal.com/developers/gitignore/api/unity,csharp
