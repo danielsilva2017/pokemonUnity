@@ -8,7 +8,7 @@ public class MoveBase : ScriptableObject
 {
     public string moveName;
     [TextArea] public string description;
-    public Type.TypeName type;
+    public Type.Label type;
     public int power;
     public int accuracy;
     public int points;

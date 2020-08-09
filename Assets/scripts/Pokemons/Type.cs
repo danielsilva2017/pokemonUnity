@@ -1,19 +1,19 @@
 ﻿public class Type
 {
-    public enum TypeName
+    public enum Label
     {
-        NONE, NORMAL, GRASS, WATER, FIRE, POISON
+        None, Normal, Grass, Water, Fire, Poison
     }
 
-    public string TypeToString(TypeName type)
+    public static string TypeToString(Label type)
     {
         switch (type)
         {
-            case TypeName.NORMAL: return "Normal";
-            case TypeName.GRASS: return "Grass";
-            case TypeName.WATER: return "Water";
-            case TypeName.FIRE: return "Fire";
-            case TypeName.POISON: return "Poison";
+            case Label.Normal: return "Normal";
+            case Label.Grass: return "Grass";
+            case Label.Water: return "Water";
+            case Label.Fire: return "Fire";
+            case Label.Poison: return "Poison";
             default: return "???";
         }
     }

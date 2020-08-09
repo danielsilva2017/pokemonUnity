@@ -24,5 +24,7 @@ MonoBehaviour:
   spDefStat: 65
   spdStat: 45
   learnableMoves:
-  - skeleton: {fileID: 0}
+  - skeleton: {fileID: 11400000, guid: 2404ff190a51bde4693561c0900ea5e3, type: 2}
+    level: 1
+  - skeleton: {fileID: 11400000, guid: 64bb3c1765befcd4a861f188b7343072, type: 2}
     level: 1

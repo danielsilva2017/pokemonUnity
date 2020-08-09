@@ -32,6 +32,7 @@ public class Pokemon
         return Mathf.FloorToInt(baseStat * Level / 100f) + (isHealth ? 10 : 5);
     }
 
+    public string Name { get { return Skeleton.pokemonName; } }
     public int MaxHealth { get { return GetEffectiveStat(Skeleton.hpStat, true); } }
     public int Attack { get { return GetEffectiveStat(Skeleton.atkStat); } }
     public int Defense { get { return GetEffectiveStat(Skeleton.defStat); } }

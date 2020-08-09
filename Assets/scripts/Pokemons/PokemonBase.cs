@@ -9,8 +9,8 @@ public class PokemonBase : ScriptableObject
     public string pokemonName;
     public string dexNumber; //also used to find the correct animations for front and back
     public Sprite icon;
-    public Type.TypeName primaryType;
-    public Type.TypeName secondaryType;
+    public Type.Label primaryType;
+    public Type.Label secondaryType;
     public int hpStat;
     public int atkStat;
     public int defStat;

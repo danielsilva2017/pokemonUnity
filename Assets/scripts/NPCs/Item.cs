@@ -48,16 +48,16 @@ public class Item : MonoBehaviour
 
     public enum ItemType
     {
-        POKEBALL, SUPER_POTION, HYPER_POTION
+        Pokeball, SuperPotion, HyperPotion
     }
 
     private string TypeToString()
     {
         switch (type)
         {
-            case ItemType.POKEBALL: return "Pokeball";
-            case ItemType.SUPER_POTION: return "Super Potion";
-            case ItemType.HYPER_POTION: return "Hyper Potion";
+            case ItemType.Pokeball: return "Pokeball";
+            case ItemType.SuperPotion: return "Super Potion";
+            case ItemType.HyperPotion: return "Hyper Potion";
             default: return "mystery item";
         }
     }

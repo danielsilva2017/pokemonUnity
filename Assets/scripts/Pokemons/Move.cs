@@ -18,4 +18,8 @@ public class Move
         Skeleton = skeleton;
         Points = points;
     }
+
+    public string Name { get { return Skeleton.moveName; } }
+    public Type.Label Type { get { return Skeleton.type; } }
+    public int MaxPoints { get { return Skeleton.points; } }
 }
