@@ -12,7 +12,6 @@ public class Chatbox : MonoBehaviour
     private Text textObject;
     private GameObject canvasObject;
     private string textToDisplay;
-    private readonly int maxCharsPerLine = 30;
     private readonly int framesPerChar = 2;
     private bool startShowingText;
     private bool isWritingText;

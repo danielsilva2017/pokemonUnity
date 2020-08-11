@@ -14,7 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveName: Vine Whip
   description: Strikes the foe with slender, whiplike vines.
-  type: 2
-  power: 45
-  accuracy: 100
+  type: 1
+  category: 0
+  targeting: 0
   points: 25
+  accuracy: 100
+  power: 45
+  logic: 3

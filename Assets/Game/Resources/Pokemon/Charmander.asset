@@ -15,14 +15,16 @@ MonoBehaviour:
   pokemonName: Charmander
   dexNumber: 4
   icon: {fileID: 21300000, guid: 1db8c546a02d2f846bc632f0c44fa9db, type: 3}
-  primaryType: 4
-  secondaryType: 0
+  primaryType: 3
+  secondaryType: 10
   hpStat: 39
   atkStat: 52
   defStat: 43
   spAtkStat: 60
   spDefStat: 50
   spdStat: 65
+  learnableAbilities:
+  - {fileID: 11400000, guid: 93d591a2248ef6c47b38d435a576c086, type: 2}
   learnableMoves:
   - skeleton: {fileID: 11400000, guid: 40e9989a0ebe2dd49966d35bb09956ac, type: 2}
     level: 1

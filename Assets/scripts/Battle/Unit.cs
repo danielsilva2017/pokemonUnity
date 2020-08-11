@@ -7,6 +7,7 @@ public class Unit : MonoBehaviour
     public GameObject animatable;
     public PokemonBase skeleton;
     public int level;
+    public Gender gender;
     public bool isAlly;
 
     private Animator animator;
@@ -15,7 +16,7 @@ public class Unit : MonoBehaviour
 
     public void Setup()
     {
-        Pokemon = new Pokemon(skeleton, level);
+        Pokemon = new Pokemon(skeleton, level, gender);
         animator = animatable.GetComponent<Animator>();
 
         animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(GetAnimationPath());
@@ -28,16 +29,4 @@ public class Unit : MonoBehaviour
     
     public string Name { get { return skeleton.pokemonName; } }
     public Move[] Moves { get { return Pokemon.Moves; } }
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
 }

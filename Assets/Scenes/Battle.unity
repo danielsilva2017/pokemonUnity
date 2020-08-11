@@ -940,6 +940,7 @@ MonoBehaviour:
   animatable: {fileID: 419246023}
   skeleton: {fileID: 11400000, guid: 61ed64831839f1f46a4d536d04b5ff4b, type: 2}
   level: 6
+  gender: 1
   isAlly: 0
 --- !u!1 &567024867
 GameObject:
@@ -1992,6 +1993,7 @@ MonoBehaviour:
   animatable: {fileID: 1102158035}
   skeleton: {fileID: 11400000, guid: ef4c5ecf1bcdb53489875b8378f33db3, type: 2}
   level: 7
+  gender: 0
   isAlly: 1
 --- !u!1 &1113305719
 GameObject:
@@ -2970,7 +2972,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1910437908
 Transform:
   m_ObjectHideFlags: 0

@@ -45,9 +45,9 @@ public class HUD : MonoBehaviour
     {
         this.ally = ally; ally.Health -= 5;
         this.enemy = enemy; enemy.Health -= 5;
-        allyName.text = Bold(ally.Name);
+        allyName.text = Bold(GetGenderedName(ally));
         allyLevel.text = Bold(ally.Level.ToString());
-        enemyName.text = Bold(enemy.Name);
+        enemyName.text = Bold(GetGenderedName(enemy));
         enemyLevel.text = Bold(enemy.Level.ToString());
 
         lastAllyHealth = ally.Health;
@@ -59,6 +59,12 @@ public class HUD : MonoBehaviour
         StartCoroutine(UpdateAllyHealthBar(true));
         StartCoroutine(UpdateAllyExpBar(true));
         StartCoroutine(UpdateEnemyHealthBar(true));
+    }
+
+    private string GetGenderedName(Pokemon pokemon)
+    {
+        var genderChar = pokemon.Gender == Gender.Male ? "<color=blue>♂</color>" : pokemon.Gender == Gender.Female ? "<color=magenta>♀</color>" : "";
+        return $"{pokemon.Name}{genderChar}";
     }
 
     public IEnumerator IntroEffect()

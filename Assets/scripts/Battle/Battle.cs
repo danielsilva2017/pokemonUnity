@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public enum BattleState
 {
-    Watching, SelectingAction, SelectingMove
+    Intro, TurnHappening, SelectingAction, SelectingMove
 }
 
 public class Battle : MonoBehaviour
@@ -16,41 +16,59 @@ public class Battle : MonoBehaviour
     public Dialog chatbox;
     public AudioSource chatSound;
     public AudioSource music;
-
+    
     private BattleState battleState;
     private int actionIndex;
     private int moveIndex;
+
+    public BattleLogic Logic { get; set; }
+
+    public IEnumerator Print(string message)
+    {
+        yield return chatbox.Print(message);
+    }
 
     // Start is called before the first frame update
     void Start()
     {
         Application.targetFrameRate = 60;
-        music.Play();
-        battleState = BattleState.Watching;
-        StartCoroutine(SetupBattle());
-    }
-
-    private IEnumerator SetupBattle()
-    {
+        //music.Play();
         playerUnit.Setup();
         enemyUnit.Setup();
         hud.Init(playerUnit.Pokemon, enemyUnit.Pokemon);
         chatbox.RefreshMoves(playerUnit.Pokemon);
-
-        chatbox.SetState(ChatState.None);
-        yield return hud.IntroEffect();  
-
-        chatbox.SetState(ChatState.ChatOnly);
-        yield return chatbox.PrintChars($"Wild {enemyUnit.Name} appeared!");
-        yield return new WaitForSeconds(1.5f);
-
-        BeginPlayerAction(false);
+        Logic = new BattleLogic(this, new List<Pokemon>() { playerUnit.Pokemon }, new List<Pokemon>() { enemyUnit.Pokemon }, 1, Weather.None);
+        battleState = BattleState.Intro;
+        StartCoroutine(BattleIntro());
     }
 
-    void BeginPlayerAction(bool immediate)
+    private IEnumerator BattleIntro()
+    {
+        //chatbox.SetState(ChatState.None);
+        //yield return hud.IntroEffect();  
+
+        chatbox.SetState(ChatState.ChatOnly);
+        yield return Print($"Wild {enemyUnit.Name} appeared!");
+        yield return new WaitForSeconds(1.5f);
+
+        BeginPlayerAction();
+    }
+
+    public void NotifyTurnFinished()
+    {
+        Debug.Log("outcome here " + Logic.Outcome);
+        BeginPlayerAction();
+    }
+
+    void PerformTurn()
+    {
+        StartCoroutine(Logic.Turn());
+    }
+
+    void BeginPlayerAction(bool immediate = false)
     {
         chatbox.SetState(ChatState.SelectAction);
-        StartCoroutine(chatbox.PrintChars($"What will {playerUnit.Name} do?", immediate));
+        StartCoroutine(chatbox.Print($"What will {playerUnit.Name} do?", immediate));
         battleState = BattleState.SelectingAction;
     }
 
@@ -60,6 +78,13 @@ public class Battle : MonoBehaviour
         battleState = BattleState.SelectingMove;
     }
 
+    void BeginTurn()
+    {
+        chatbox.SetState(ChatState.ChatOnly);
+        battleState = BattleState.TurnHappening;
+        PerformTurn();
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -67,6 +92,8 @@ public class Battle : MonoBehaviour
             ActionPicker();
         else if (battleState == BattleState.SelectingMove)
             MovePicker();
+        //else if (battleState == BattleState.TurnHappening)
+            //PerformTurn();
     }
 
     void ActionPicker()
@@ -127,13 +154,14 @@ public class Battle : MonoBehaviour
         // perform move
         if (Input.GetKeyDown(KeyCode.Z))
         {
+            chatbox.SetState(ChatState.ChatOnly);
             chatSound.Play();
-            playerUnit.Pokemon.Health += 4;
-            enemyUnit.Pokemon.Health += 4;
-            StartCoroutine(hud.UpdateAllyHealth());
+            BeginTurn();
+            //playerUnit.Moves[moveIndex].Functions.Execute(playerUnit.Moves[moveIndex], playerUnit.Pokemon, enemyUnit.Pokemon, this, 1);
+            /*StartCoroutine(hud.UpdateAllyHealth());
             StartCoroutine(hud.UpdateAllyExpBar());
             StartCoroutine(hud.UpdateAllyHealthBar());
-            StartCoroutine(hud.UpdateEnemyHealthBar());
+            StartCoroutine(hud.UpdateEnemyHealthBar());*/
         }
     }
 }

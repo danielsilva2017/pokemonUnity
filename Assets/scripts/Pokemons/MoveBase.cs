@@ -4,12 +4,23 @@ using UnityEngine;
 
 [CreateAssetMenu(fileName = "Move", menuName = "Move")]
 
+/// <summary>
+/// The skeleton data for a move, which can be set through the Unity UI.
+/// </summary>
 public class MoveBase : ScriptableObject
 {
     public string moveName;
     [TextArea] public string description;
-    public Type.Label type;
+    public Type type;
+    public Category category;
+    public Targeting targeting;
+    public int points; // 0 = infinite
+    public int accuracy; // 0-100
     public int power;
-    public int accuracy;
-    public int points;
+    public MoveLogic logic;
+}
+
+public enum Category
+{
+    Physical, Special, Status
 }

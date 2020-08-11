@@ -44,7 +44,7 @@ public class Dialog : MonoBehaviour
         if (move == null) return;
 
         movePoints.text = $"PP   {move.Points}/{move.MaxPoints}";
-        moveType.text = $"<size=22>Type / </size>{Type.TypeToString(move.Type)}";
+        moveType.text = $"<size=22>Type / </size>{Types.TypeToString(move.Type)}";
     }
 
     public void SetState(ChatState state)
@@ -84,7 +84,7 @@ public class Dialog : MonoBehaviour
         }
     }
 
-    public IEnumerator PrintChars(string message, bool immediate = false)
+    public IEnumerator Print(string message, bool immediate = false)
     {
         if (immediate)
         {

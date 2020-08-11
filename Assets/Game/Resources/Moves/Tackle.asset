@@ -14,7 +14,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveName: Tackle
   description: Charges the foe with a full-body tackle.
-  type: 1
-  power: 40
-  accuracy: 100
+  type: 0
+  category: 0
+  targeting: 0
   points: 35
+  accuracy: 100
+  power: 40
+  logic: 2
