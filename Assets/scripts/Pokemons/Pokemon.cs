@@ -13,24 +13,43 @@ public class Pokemon : IComparable<Pokemon>
     public PokemonBase Skeleton { get; set; }
     public Ability Ability { get; set; }
     public Move[] Moves { get; set; }
-    public int Level { get; set; }
     public Gender Gender { get; set; }
     public Status Status { get; set; }
     public bool CanAttack { get; set; }
-    public Pokemon LastHitBy { get; set; }
+    public List<Pokemon> ExpCandidates { get; set; } // those who will get xp if this pokemon dies
+    public Move LastHitByMove { get; set; } // last move to successfully target this pokemon
+    public Pokemon LastHitByUser { get; set; } // last pokemon to successfully target this pokemon
     public bool IsAlly { get; set; }
     public int Health {
         get { return health; }
-        set { health = Limit(0, value, MaxHealth); }
+        set { health = Limit(0, value, MaxHealth); } // enforce health limits
     }
+    public int Level {
+        get { return level; }
+        set { level = Limit(1, value, 100); } // enforce level limits
+    }
+    public int Experience
+    {
+        get { return exp; }
+        set { exp = Math.Min(value, MaxExperience); } // enforce xp limits
+    }
+    public int NextLevelExp { get; set; } // minimum total xp to reach next level
+    public int CurLevelExp { get; set; } // minimum total xp to be at current level
 
+    private readonly int MaxExperience; // xp cap
     private int health;
+    private int level;
+    private int exp;
 
     public Pokemon(PokemonBase skeleton, int level, Gender gender, Status status = Status.None, bool canAttack = true)
     {
         Skeleton = skeleton;
         Ability = new Ability(RandomElement(skeleton.learnableAbilities));
         Level = level;
+        MaxExperience = GetExpFromLevel(100, ExpGroup);
+        Experience = GetExpFromLevel(level, ExpGroup);
+        CurLevelExp = Experience;
+        NextLevelExp = level + 1 >= 100 ? MaxExperience : GetExpFromLevel(level + 1, ExpGroup);
         Gender = gender;
         Health = MaxHealth;
         Status = status;
@@ -48,6 +67,15 @@ public class Pokemon : IComparable<Pokemon>
         }
     }
 
+    public void LevelUp()
+    {
+        var oldMaxHp = MaxHealth;
+        Level++;
+        CurLevelExp = NextLevelExp;
+        NextLevelExp = Level + 1 >= 100 ? MaxExperience : GetExpFromLevel(Level + 1, ExpGroup);
+        Health += MaxHealth - oldMaxHp;
+    }
+
     public bool NoMoves()
     {
         return Moves.All(move => move.Points <= 0);
@@ -58,20 +86,21 @@ public class Pokemon : IComparable<Pokemon>
         var selfSpeed = GetEffectiveStat(Speed, SpeedStage) * (Status == Status.Paralyzed ? 0.5f : 1f);
         var otherSpeed = GetEffectiveStat(other.Speed, other.SpeedStage) * (other.Status == Status.Paralyzed ? 0.5f : 1f);
 
-        if (selfSpeed == otherSpeed) return RandomFloat() >= 0.5f ? -1 : 1; // tie
+        if (selfSpeed == otherSpeed) return Chance(50) ? -1 : 1; // tie
         return Mathf.FloorToInt(otherSpeed - selfSpeed);
     }
 
     // converts base stat to an actual stat
     private int GetStat(int baseStat, bool isHealth = false)
     {
-        return Mathf.FloorToInt(baseStat * Level / 100f) + (isHealth ? 10 : 5);
+        return Mathf.FloorToInt(baseStat * 2f * Level * 0.01f) + (isHealth ? Level + 10 : 5);
     }
 
     // some getters for convenience
     public string Name { get { return Skeleton.pokemonName; } }
     public Type PrimaryType { get { return Skeleton.primaryType; } }
     public Type SecondaryType { get { return Skeleton.secondaryType; } }
+    public ExpGroup ExpGroup { get { return Skeleton.expGroup; } }
 
     // raw stat, calculated from base stats
     public int MaxHealth { get { return GetStat(Skeleton.hpStat, true); } }
@@ -97,7 +126,8 @@ public enum Gender
     Male, Female, None
 }
 
+// the spritesheet uses the order: // psn, bpsn, slp, par, frz, brn, fnt
 public enum Status
 {
-    Burned, Poisoned, Frozen, Paralyzed, Sleeping, Fainted, Toxic, None
+    Poisoned, Toxic, Sleeping, Paralyzed, Frozen, Burned, Fainted, None
 }

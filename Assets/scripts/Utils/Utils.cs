@@ -21,9 +21,31 @@ public class Utils
         return UnityEngine.Random.Range(min, max);
     }
 
+    /// <summary>
+    /// Performs a roll with a certain chance (from 0 to 100) of succeeding.
+    /// </summary>
+    public static bool Chance(int successChance)
+    {
+        return RandomFloat() <= successChance / 100f;
+    }
+
+    /// <summary>
+    /// Random element from a list.
+    /// </summary>
     public static T RandomElement<T>(T[] list)
     {
         return list[RandomInt(0, list.Length - 1)];
+    }
+
+    /// <summary>
+    /// Random non-null element from a list. This method will not terminate if the list only contains null values.
+    /// </summary>
+    public static T RandomNonNullElement<T>(T[] list)
+    {
+        int choice;
+        do { choice = RandomInt(0, list.Length - 1); }
+        while (list[choice] == null);
+        return list[choice];
     }
 
     /// <summary>
@@ -75,23 +97,28 @@ public class Utils
     /// </summary>
     public static bool IsHit(Move move, Pokemon user, Pokemon target)
     {
+        if (move.Accuracy == 0f) return true;
+
         var _stage = Limit(-6, user.AccuracyStage - target.EvasionStage, 6);
         return move.Accuracy / 100f * GetEffectiveAccuracy(_stage) >= RandomFloat();
     }
+
+    /// <summary>
+    /// A flag holding the result of the last IsCrit call.
+    /// </summary>
+    public static bool LastMoveWasCrit = false;
 
     /// <summary>
     /// Check if Pokemon rolled a crit.
     /// </summary>
     public static bool IsCrit(int stage)
     {
-        bool crit;
-        if (stage <= 0) crit = RandomFloat() <= 1f / 24f;
-        else if (stage == 1) crit = RandomFloat() <= 1f / 8f;
-        else if (stage == 2) crit = RandomFloat() <= 1f / 2f;
-        else crit = true;
+        if (stage <= 0) LastMoveWasCrit = RandomFloat() <= 1f / 24f;
+        else if (stage == 1) LastMoveWasCrit = RandomFloat() <= 1f / 8f;
+        else if (stage == 2) LastMoveWasCrit = RandomFloat() <= 1f / 2f;
+        else LastMoveWasCrit = true;
 
-        if (crit) Debug.Log("critical hit");
-        return crit;
+        return LastMoveWasCrit;
     }
 
     /// <summary>
@@ -130,5 +157,59 @@ public class Utils
 
         // don't overkill
         return Math.Min(Mathf.FloorToInt(total), target.Health);
+    }
+
+    /// <summary>
+    /// Calculates the total experience required to reach a certain level.
+    /// </summary>
+    public static int GetExpFromLevel(int level, ExpGroup expGroup)
+    {
+        if (level == 1) return 0;
+
+        switch (expGroup)
+        {
+            case ExpGroup.Erratic:
+                if (level <= 50) return Mathf.FloorToInt(level * level * level * (100 - level) * 0.02f);
+                else if (level <= 68) return Mathf.FloorToInt(level * level * level * (150 - level) * 0.01f);
+                else if (level <= 98) return Mathf.FloorToInt(level * level * level * (1911 - 10 * level) * 0.333f * 0.002f);
+                else return Mathf.FloorToInt(level * level * level * (160 - level) * 0.01f);
+            case ExpGroup.Fast:
+                return Mathf.FloorToInt(4 * level * level * level * 0.2f);
+            case ExpGroup.MediumFast:
+                return level * level * level;
+            case ExpGroup.MediumSlow:
+                return Mathf.FloorToInt(1.2f * level * level * level - 15 * level * level + 100 * level - 140);
+            case ExpGroup.Slow:
+                return Mathf.FloorToInt(5 * level * level * level * 0.25f);
+            case ExpGroup.Fluctuating:
+                if (level <= 15) return Mathf.FloorToInt(level * level * level * ((level + 1) * 0.333f + 24) * 0.02f);
+                else if (level <= 36) return Mathf.FloorToInt(level * level * level * (level + 14) * 0.02f);
+                else return Mathf.FloorToInt(level * level * level * (level * 0.5f + 32) * 0.02f);
+            default:
+                return -1;
+        }
+    }
+
+    /// <summary>
+    /// Calculates the level a Pokemon will have given a certain amount of total xp.
+    /// </summary>
+    public static int GetLevelFromExp(int exp, ExpGroup expGroup)
+    {
+        int level = 1;
+        int lastCalculatedExp = 0;
+        while (lastCalculatedExp < exp)
+            lastCalculatedExp = GetExpFromLevel(++level, expGroup);
+        return Math.Min(100, lastCalculatedExp > exp ? level - 1 : level);
+    }
+
+    /// <summary>
+    /// Calculates the exp reward for killing a Pokemon.
+    /// </summary>
+    public static int GetExpForKill(Pokemon expCandidate, Pokemon fainted, Battle battle)
+    {
+        var trainer = battle.isTrainerBattle ? 1.5f : 1f;
+        var baseExp = fainted.Skeleton.expStat;
+        return Mathf.FloorToInt((trainer * baseExp * fainted.Level * Mathf.Pow(2 * fainted.Level + 10f, 2.5f)) /
+            (5f * fainted.ExpCandidates.Count * Mathf.Pow(fainted.Level + expCandidate.Level + 10, 2.5f)) + 1);
     }
 }

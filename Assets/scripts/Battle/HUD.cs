@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 
 public class HUD : MonoBehaviour
 {
@@ -13,6 +14,8 @@ public class HUD : MonoBehaviour
     public Text enemyLevel;
     public Image allyHUD;
     public Image enemyHUD;
+    public SpriteRenderer allyStatus;
+    public SpriteRenderer enemyStatus; 
     public GameObject allyHealthBar;
     public GameObject allyExpBar;
     public GameObject enemyHealthBar;
@@ -21,6 +24,7 @@ public class HUD : MonoBehaviour
 
     private Pokemon ally;
     private Pokemon enemy;
+    private Sprite[] statuses; // psn, bpsn, slp, par, frz, brn, fnt
     private int lastAllyHealth;
     private float lastAllyHealthBar;
     private float lastAllyExpBar;
@@ -32,13 +36,7 @@ public class HUD : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        statuses = Resources.LoadAll<Sprite>("Images/status");
     }
 
     public void Init(Pokemon ally, Pokemon enemy)
@@ -52,13 +50,14 @@ public class HUD : MonoBehaviour
 
         lastAllyHealth = ally.Health;
         lastAllyHealthBar = ((float) ally.Health) / ally.MaxHealth;
-        lastAllyExpBar = ((float)2) / 3;
+        lastAllyExpBar = ((float) ally.Experience - ally.CurLevelExp) / (ally.NextLevelExp - ally.CurLevelExp);
         lastEnemyHealthBar = ((float)enemy.Health) / enemy.MaxHealth;
 
         StartCoroutine(UpdateAllyHealth(true));
         StartCoroutine(UpdateAllyHealthBar(true));
         StartCoroutine(UpdateAllyExpBar(true));
         StartCoroutine(UpdateEnemyHealthBar(true));
+        UpdateStatuses();
     }
 
     private string GetGenderedName(Pokemon pokemon)
@@ -125,8 +124,17 @@ public class HUD : MonoBehaviour
 
     public IEnumerator UpdateAllyExpBar(bool immediate = false)
     {
-        yield return UpdateBar(allyExpBar, 2, 3, lastAllyExpBar, immediate);
-        lastAllyExpBar = ((float)2) / 3;
+        yield return UpdateBar(allyExpBar, ally.Experience - ally.CurLevelExp, ally.NextLevelExp - ally.CurLevelExp, lastAllyExpBar, immediate);
+        lastAllyExpBar = ((float)ally.Experience - ally.CurLevelExp) / (ally.NextLevelExp - ally.CurLevelExp);
+    }
+
+    // uses dummy values to simulate a level up without doing exp calculations
+    public IEnumerator FillAllyExpBar(bool immediate = false)
+    {
+        yield return UpdateBar(allyExpBar, 1, 1, lastAllyExpBar, immediate);
+        allyLevel.text = Bold(ally.Level.ToString());
+        yield return null;
+        lastAllyExpBar = 0f;
     }
 
     public IEnumerator UpdateAllyHealth(bool immediate = false)
@@ -143,7 +151,7 @@ public class HUD : MonoBehaviour
 
         for (var i=0; i<=frames; i++)
         {
-            allyHealth.text = Bold($"{Mathf.FloorToInt(lastAllyHealth + diff * i / frames)}/{ally.MaxHealth}");
+            allyHealth.text = Bold($"{Math.Max(0, Mathf.FloorToInt(lastAllyHealth + diff * i / frames))}/{ally.MaxHealth}");
             yield return null;
         }
 
@@ -151,6 +159,23 @@ public class HUD : MonoBehaviour
         allyHealth.text = Bold($"{ally.Health}/{ally.MaxHealth}");
 
         lastAllyHealth = ally.Health;
+    }
+
+    public void UpdateStatuses()
+    {
+        UpdateStatus(ally, allyStatus);
+        UpdateStatus(enemy, enemyStatus);
+    }
+
+    private void UpdateStatus(Pokemon pokemon, SpriteRenderer statusHUD)
+    {
+        if (pokemon.Status == Status.None)
+        {
+            statusHUD.sprite = null;
+            return;
+        }
+
+        statusHUD.sprite = statuses[(int) pokemon.Status];
     }
 
     private void ShowAll()

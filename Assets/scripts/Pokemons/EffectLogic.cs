@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using static Utils;
+using System;
 
 /// <summary>
 /// The actual logic of the effect, holding all life cycle functions.
@@ -30,6 +31,14 @@ public abstract class EffectFunctions
     public virtual IEnumerator OnOverworld() { yield return null; }
 }
 
+/// <summary>
+/// Used to select the adequate effect logic for an effect instance.
+/// </summary>
+public enum EffectLogic
+{
+    Freeze, Burn
+}
+
 public enum Trigger
 {
     StartOfTurn, EndOfTurn, OnDeath, OnSwitchIn, OnSwitchOut
@@ -40,7 +49,7 @@ public class Freeze : EffectFunctions
     public Freeze()
     {
         Name = "Frozen";
-        Duration = RandomInt(1, 4);
+        Duration = RandomInt(2, 2);
         Trigger = Trigger.StartOfTurn;
         EndOnSwitch = false;
     }
@@ -49,21 +58,41 @@ public class Freeze : EffectFunctions
     {
         target.Status = Status.Frozen;
         target.CanAttack = false;
-        battle.Print($"{target.Name} became frozen!");
-        yield return null;
+        yield return battle.Print($"{target.Name} became frozen!");
     }
 
     public override IEnumerator Execute(Effect effect, Pokemon user, Pokemon target, Battle battle)
     {
-        battle.Print($"{target.Name} is frozen solid!");
-        yield return null;
+        yield return battle.Print($"{target.Name} is frozen solid!");
     }
 
     public override IEnumerator OnDeletion(Effect effect, Pokemon user, Pokemon target, Battle battle)
     {
         target.Status = Status.None;
         target.CanAttack = true;
-        battle.Print($"{target.Name} has defrosted.");
-        yield return null;
+        yield return battle.Print($"{target.Name} has defrosted.");
+    }
+}
+
+public class Burn : EffectFunctions
+{
+    public Burn()
+    {
+        Name = "Burned";
+        Trigger = Trigger.EndOfTurn;
+        EndOnSwitch = false;
+    }
+
+    public override IEnumerator OnCreation(Effect effect, Pokemon user, Pokemon target, Battle battle)
+    {
+        target.Status = Status.Burned;
+        yield return battle.Print($"{target.Name} is now burning!");
+    }
+
+    public override IEnumerator Execute(Effect effect, Pokemon user, Pokemon target, Battle battle)
+    {
+        yield return battle.Print($"{target.Name} is suffering from a burn.");
+        var damage = Mathf.FloorToInt(target.MaxHealth / 16f);
+        target.Health -= damage < 1 ? 1 : damage;
     }
 }

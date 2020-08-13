@@ -15,7 +15,7 @@ public class MoveBase : ScriptableObject
     public Category category;
     public Targeting targeting;
     public int points; // 0 = infinite
-    public int accuracy; // 0-100
+    public int accuracy; // 1-100. 0 = never misses
     public int power;
     public MoveLogic logic;
 }

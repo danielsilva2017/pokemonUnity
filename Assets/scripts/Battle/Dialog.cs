@@ -21,6 +21,8 @@ public class Dialog : MonoBehaviour
 
     private readonly int framesPerChar = 2;
 
+    public bool IsBusy { get; set; }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -43,7 +45,7 @@ public class Dialog : MonoBehaviour
     {
         if (move == null) return;
 
-        movePoints.text = $"PP   {move.Points}/{move.MaxPoints}";
+        movePoints.text = move.MaxPoints == 0 ? "PP   --/--" : $"PP   {move.Points}/{move.MaxPoints}";
         moveType.text = $"<size=22>Type / </size>{Types.TypeToString(move.Type)}";
     }
 
@@ -92,6 +94,8 @@ public class Dialog : MonoBehaviour
             yield break;
         }
 
+        IsBusy = true;
+
         var lastCheckedIndex = 0;
         var tagOpenFound = false;
         var tagsClosedFound = 0;
@@ -121,5 +125,6 @@ public class Dialog : MonoBehaviour
             yield return null;
         }
 
+        IsBusy = false;
     }
 }

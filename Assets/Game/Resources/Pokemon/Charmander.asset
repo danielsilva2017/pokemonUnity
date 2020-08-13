@@ -23,8 +23,10 @@ MonoBehaviour:
   spAtkStat: 60
   spDefStat: 50
   spdStat: 65
+  expGroup: 3
+  expStat: 62
   learnableAbilities:
   - {fileID: 11400000, guid: 93d591a2248ef6c47b38d435a576c086, type: 2}
   learnableMoves:
-  - skeleton: {fileID: 11400000, guid: 40e9989a0ebe2dd49966d35bb09956ac, type: 2}
+  - skeleton: {fileID: 11400000, guid: e0cdc3c7c3082ae4cbc5d9048d37e456, type: 2}
     level: 1

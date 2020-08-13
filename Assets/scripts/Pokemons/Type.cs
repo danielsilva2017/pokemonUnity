@@ -19,7 +19,7 @@ public class Types
             case Type.Ice: return "Ice";
             case Type.Rock: return "Rock";
             case Type.Poison: return "Poison";
-            case Type.None: return "";
+            case Type.None: return "--";
             default: return "???";
         }
     }
