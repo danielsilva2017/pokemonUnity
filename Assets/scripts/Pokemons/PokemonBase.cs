@@ -10,7 +10,7 @@ using UnityEngine;
 public class PokemonBase : ScriptableObject
 {
     public string pokemonName;
-    public string dexNumber; //also used to find the correct animations for front and back
+    public int dexNumber; //also used to find the correct animations for front and back
     public Sprite icon;
     public Type primaryType;
     public Type secondaryType;

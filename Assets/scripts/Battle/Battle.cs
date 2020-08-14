@@ -6,15 +6,18 @@ using static Utils;
 
 public enum BattleState
 {
-    Intro, TurnHappening, SelectingAction, SelectingMove
+    Intro, TurnHappening, SelectingAction, SelectingMove, Idle
 }
 
 public class Battle : MonoBehaviour
 {
+    public GameObject battleCanvas;
+    public GameObject partyCanvas;
     public Unit playerUnit;
     public Unit enemyUnit;
     public HUD hud;
     public Dialog chatbox;
+    public Party party;
     public AudioSource chatSound;
     public AudioSource hitSound;
     public AudioSource notVeryEffectiveSound;
@@ -29,6 +32,9 @@ public class Battle : MonoBehaviour
     private int moveIndex;
     private List<Pokemon> order;
     private List<MoveCommand> moveQueue;
+
+    public PokemonBase c;
+    public PokemonBase sn;
 
     public BattleLogic Logic { get; set; }
 
@@ -45,12 +51,15 @@ public class Battle : MonoBehaviour
     void Start()
     {
         Application.targetFrameRate = 60;
+        partyCanvas.SetActive(false);
         music.Play();
         playerUnit.Setup();
         enemyUnit.Setup();
         hud.Init(playerUnit.Pokemon, enemyUnit.Pokemon);
         chatbox.RefreshMoves(playerUnit.Pokemon);
-        Logic = new BattleLogic(this, new List<Pokemon>() { playerUnit.Pokemon }, new List<Pokemon>() { enemyUnit.Pokemon }, 1, Weather.None);
+        var pc = new Pokemon(c, 14, Gender.Female);
+        var sc = new Pokemon(sn, 21, Gender.Male); sc.Health = 0; sc.Status = Status.Fainted;
+        Logic = new BattleLogic(this, new List<Pokemon>() { playerUnit.Pokemon, sc, playerUnit.Pokemon, playerUnit.Pokemon, pc }, new List<Pokemon>() { enemyUnit.Pokemon }, 1, Weather.None);
         moveQueue = new List<MoveCommand>();
         order = Logic.SortBySpeed();
         battleState = BattleState.Intro;
@@ -140,6 +149,16 @@ public class Battle : MonoBehaviour
         PerformTurn();
     }
 
+    private IEnumerator BeginSwitch()
+    {
+        battleState = BattleState.Idle;
+        yield return hud.FadeOut();
+        battleCanvas.SetActive(false);
+        partyCanvas.SetActive(true);
+        party.Init(Logic);
+        yield return hud.FadeIn();
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -174,6 +193,8 @@ public class Battle : MonoBehaviour
                     BeginPlayerMove();
                     break;
                 case 1:
+                    StartCoroutine(BeginSwitch());
+                    break;
                 case 2:
                 case 3: break;
             }
@@ -224,12 +245,7 @@ public class Battle : MonoBehaviour
                 orderIndex++;
                 BeginPlayerAction();
             }
-            
-            //playerUnit.Moves[moveIndex].Functions.Execute(playerUnit.Moves[moveIndex], playerUnit.Pokemon, enemyUnit.Pokemon, this, 1);
-            /*StartCoroutine(hud.UpdateAllyHealth());
-            StartCoroutine(hud.UpdateAllyExpBar());
-            StartCoroutine(hud.UpdateAllyHealthBar());
-            StartCoroutine(hud.UpdateEnemyHealthBar());*/
+
         }
     }
 }

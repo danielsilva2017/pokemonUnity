@@ -21,6 +21,7 @@ public class HUD : MonoBehaviour
     public GameObject enemyHealthBar;
     public GameObject allyHealthBarFull;
     public GameObject enemyHealthBarFull;
+    public SpriteRenderer transition;
 
     private Pokemon ally;
     private Pokemon enemy;
@@ -32,6 +33,7 @@ public class HUD : MonoBehaviour
 
     private readonly float introSpeed = 0.8f;
     private readonly float updateSpeed = 2f;
+    private readonly float transitionSpeed = 10f;
 
     // Start is called before the first frame update
     void Start()
@@ -41,6 +43,7 @@ public class HUD : MonoBehaviour
 
     public void Init(Pokemon ally, Pokemon enemy)
     {
+        transition.enabled = false;
         this.ally = ally; ally.Health -= 5;
         this.enemy = enemy; enemy.Health -= 5;
         allyName.text = Bold(GetGenderedName(ally));
@@ -176,6 +179,34 @@ public class HUD : MonoBehaviour
         }
 
         statusHUD.sprite = statuses[(int) pokemon.Status];
+    }
+
+    public IEnumerator FadeOut()
+    {
+        transition.enabled = true;
+        var frames = 1 / transitionSpeed * 100;
+
+        for (var i = 0; i <= frames; i++)
+        {
+            transition.color = new Color(transition.color.r, transition.color.g, transition.color.b, i / frames);
+            yield return null;
+        }
+
+        transition.enabled = false;
+    }
+
+    public IEnumerator FadeIn()
+    {
+        transition.enabled = true;
+        var frames = 1 / transitionSpeed * 100;
+
+        for (var i = frames; i >= 0; i--)
+        {
+            transition.color = new Color(transition.color.r, transition.color.g, transition.color.b, i / frames);
+            yield return null;
+        }
+
+        transition.enabled = false;
     }
 
     private void ShowAll()

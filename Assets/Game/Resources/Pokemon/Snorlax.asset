@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 177d2a6b275cce74d93b3872cf06afef, type: 3}
+  m_Name: Snorlax
+  m_EditorClassIdentifier: 
+  pokemonName: Snorlax
+  dexNumber: 143
+  icon: {fileID: 21300000, guid: 2bfb410f0f371b14fbf4bfee25dbc51a, type: 3}
+  primaryType: 0
+  secondaryType: 10
+  hpStat: 160
+  atkStat: 110
+  defStat: 65
+  spAtkStat: 65
+  spDefStat: 110
+  spdStat: 30
+  expGroup: 4
+  expStat: 189
+  learnableAbilities:
+  - {fileID: 11400000, guid: ed31c51450bda3a43b09acba758aebfb, type: 2}
+  learnableMoves:
+  - skeleton: {fileID: 11400000, guid: 2404ff190a51bde4693561c0900ea5e3, type: 2}
+    level: 1

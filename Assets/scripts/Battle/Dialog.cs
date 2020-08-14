@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public enum ChatState
 {
-    None, ChatOnly, SelectAction, SelectMove
+    None, ChatOnly, SelectAction, SelectMove, Party
 }
 
 public class Dialog : MonoBehaviour
@@ -60,6 +60,10 @@ public class Dialog : MonoBehaviour
                 moveType.enabled = false;
                 actionSelector.SetActive(false);
                 moveSelector.SetActive(false);
+                break;
+            case ChatState.Party:
+                chatbox.enabled = true;
+                chatText.enabled = true;
                 break;
             case ChatState.ChatOnly:
                 chatbox.enabled = true;
