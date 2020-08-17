@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System;
 
 public class Utils
@@ -38,6 +39,14 @@ public class Utils
     }
 
     /// <summary>
+    /// Random element from a list.
+    /// </summary>
+    public static T RandomElement<T>(List<T> list)
+    {
+        return list[RandomInt(0, list.Count - 1)];
+    }
+
+    /// <summary>
     /// Random non-null element from a list. This method will not terminate if the list only contains null values.
     /// </summary>
     public static T RandomNonNullElement<T>(T[] list)
@@ -62,6 +71,31 @@ public class Utils
     public static float Limit(float min, float value, float max)
     {
         return Math.Max(min, Math.Min(value, max));
+    }
+
+    /// <summary>
+    /// Makes an image invisible.
+    /// </summary>
+    public static void MakeInvisible(Image image)
+    {
+        image.color = new Color(image.color.r, image.color.g, image.color.b, 0);
+    }
+
+    /// <summary>
+    /// Makes an image visible.
+    /// </summary>
+    public static void MakeVisible(Image image)
+    {
+        image.color = new Color(image.color.r, image.color.g, image.color.b, 1);
+    }
+
+    /// <summary>
+    /// Creates a Pokemon given a species name.
+    /// </summary>
+    public static Pokemon CreatePokemon(string speciesName, int level, Gender gender)
+    {
+        var skeleton = Resources.Load<PokemonBase>($"Pokemon/{speciesName}");
+        return new Pokemon(skeleton, level, gender);
     }
 
     /// <summary>
@@ -205,11 +239,11 @@ public class Utils
     /// <summary>
     /// Calculates the exp reward for killing a Pokemon.
     /// </summary>
-    public static int GetExpForKill(Pokemon expCandidate, Pokemon fainted, Battle battle)
+    public static int GetExpForKill(Pokemon candidate, Pokemon fainted, int candidates, bool isTrainerBattle)
     {
-        var trainer = battle.isTrainerBattle ? 1.5f : 1f;
+        var trainer = isTrainerBattle ? 1.5f : 1f;
         var baseExp = fainted.Skeleton.expStat;
         return Mathf.FloorToInt((trainer * baseExp * fainted.Level * Mathf.Pow(2 * fainted.Level + 10f, 2.5f)) /
-            (5f * fainted.ExpCandidates.Count * Mathf.Pow(fainted.Level + expCandidate.Level + 10, 2.5f)) + 1);
+            (5f * candidates * Mathf.Pow(fainted.Level + candidate.Level + 10, 2.5f)) + 1);
     }
 }

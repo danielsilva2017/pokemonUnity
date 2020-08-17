@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using static Utils;
 
 public enum BattleState
@@ -24,18 +25,17 @@ public class Battle : MonoBehaviour
     public AudioSource superEffectiveSound;
     public AudioSource levelUpSound;
     public AudioSource music;
-    public bool isTrainerBattle;
-    
-    private BattleState battleState;
+
     private int orderIndex;
     private int actionIndex;
     private int moveIndex;
+    private int forcedSwitchIndex;
+    private bool isForcedSwitch;
     private List<Pokemon> order;
-    private List<MoveCommand> moveQueue;
+    private List<SwitchCommand> switchQueue; // some elements may be null
+    private List<MoveCommand> moveQueue; // some elements may be null
 
-    public PokemonBase c;
-    public PokemonBase sn;
-
+    public BattleState BattleState { get; set; }
     public BattleLogic Logic { get; set; }
 
     /// <summary>
@@ -50,20 +50,28 @@ public class Battle : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // Get init data
+        var battleInfo = SceneInfo.GetBattleInfo();
+
+        // Logic setup
+        EnsureAllLeadingPokemonAlive(battleInfo);
+        Logic = new BattleLogic(this, battleInfo);
+        moveQueue = new List<MoveCommand>();
+        switchQueue = new List<SwitchCommand>();
+        order = Logic.SortBySpeed();
+
+        // UI setup
         Application.targetFrameRate = 60;
         partyCanvas.SetActive(false);
-        music.Play();
-        playerUnit.Setup();
-        enemyUnit.Setup();
+        playerUnit.Setup(Logic.ActiveAllies[0]); 
+        enemyUnit.Setup(Logic.ActiveEnemies[0]);
         hud.Init(playerUnit.Pokemon, enemyUnit.Pokemon);
         chatbox.RefreshMoves(playerUnit.Pokemon);
-        var pc = new Pokemon(c, 14, Gender.Female);
-        var sc = new Pokemon(sn, 21, Gender.Male); sc.Health = 0; sc.Status = Status.Fainted;
-        Logic = new BattleLogic(this, new List<Pokemon>() { playerUnit.Pokemon, sc, playerUnit.Pokemon, playerUnit.Pokemon, pc }, new List<Pokemon>() { enemyUnit.Pokemon }, 1, Weather.None);
-        moveQueue = new List<MoveCommand>();
-        order = Logic.SortBySpeed();
-        battleState = BattleState.Intro;
+
+        // Battle intro
+        BattleState = BattleState.Intro;
         StartCoroutine(BattleIntro());
+        music.Play();
     }
 
     private IEnumerator BattleIntro()
@@ -78,18 +86,74 @@ public class Battle : MonoBehaviour
         BeginPlayerAction();
     }
 
+    /// <summary>
+    /// Makes sure the player does not deploy a fainted Pokemon at the beginning of the fight.
+    /// </summary>
+    private void EnsureAllLeadingPokemonAlive(BattleInfo info)
+    {
+        for (var i = 0; i < info.BattleSize && i < info.Allies.Count; i++)
+        {
+            if (info.Allies[i].Status == Status.Fainted)
+            {
+                var swap = info.Allies[i];
+                var alive = info.Allies.FindIndex(i + 1, pkmn => pkmn.Health > 0);
+                info.Allies[i] = info.Allies[alive];
+                info.Allies[alive] = swap;
+            }
+        }
+    }
+
+    /// <summary>
+    /// Seek the next mandatory replacement of a Pokemon (because it fainted and more are available), if any.
+    /// </summary>
+    private void MoveToNextForcedSwitch()
+    {
+        var actives = Logic.ActivePokemons();
+        while (forcedSwitchIndex < actives.Count && actives[forcedSwitchIndex].Health > 0)
+            forcedSwitchIndex++;
+
+        if (forcedSwitchIndex < actives.Count) // begin a forced switch
+        { 
+            if (actives[forcedSwitchIndex].IsAlly) // prompt a switch
+            {
+                isForcedSwitch = true;
+                StartCoroutine(BeginSwitch());
+            }
+            else // AI's decision
+            {
+                var switchedIn = RandomElement(Logic.PartyEnemies.FindAll(pkmn => pkmn.Health > 0));
+                Logic.SwitchPokemonImmediate(Logic.ActivePokemons()[forcedSwitchIndex], switchedIn);
+                MoveToNextForcedSwitch();
+            }   
+        }
+        else // all forced switches done, proceed with the game
+        {
+            order = Logic.SortBySpeed();
+            BeginPlayerAction();
+        }
+    }
+
+    private void PerformForcedSwitches()
+    {
+        BattleState = BattleState.Idle;
+        MoveToNextForcedSwitch();
+    }
+
     public void NotifyTurnFinished()
     {
         switch (Logic.Outcome)
         {
             case Outcome.Undecided:
                 orderIndex = 0;
+                forcedSwitchIndex = 0;
                 moveQueue = new List<MoveCommand>();
-                order = Logic.SortBySpeed();
-                BeginPlayerAction();
+                switchQueue = new List<SwitchCommand>();
+                PerformForcedSwitches();
                 break;
             case Outcome.Win:
                 StartCoroutine(Print("win"));
+                SceneInfo.GetBattleInfo().Trainer.IsDefeated = true;
+                SceneManager.LoadScene(SceneInfo.GetOverworldInfo().Scene);
                 break;
             case Outcome.Loss:
                 StartCoroutine(Print("loss"));
@@ -100,75 +164,175 @@ public class Battle : MonoBehaviour
         }      
     }
 
-    public void NotifyUpdateHealth(bool immediate = false)
+    /// <summary>
+    /// Updates the ally and enemy's health bars and statuses either smoothly or instantly.
+    /// </summary>
+    public IEnumerator NotifyUpdateHealth(bool immediate = false)
     {
-        StartCoroutine(hud.UpdateAllyHealth(immediate));
-        StartCoroutine(hud.UpdateAllyHealthBar(immediate));
-        StartCoroutine(hud.UpdateEnemyHealthBar(immediate));
         hud.UpdateStatuses();
+        yield return hud.UpdateAllyHealth(immediate);
+        yield return hud.UpdateEnemyHealth(immediate);
     }
 
     public IEnumerator NotifyUpdateExp(bool fill)
     {
-        yield return fill ? hud.FillAllyExpBar() : hud.UpdateAllyExpBar();
+        yield return fill ? hud.FillAllyExpBar() : hud.UpdateAllyExp();
     }
 
-    void PerformTurn()
+    public void NotifySwitchPerformed(Pokemon selection)
     {
-        StartCoroutine(Logic.Turn(moveQueue));
+        // cancelled
+        if (selection == null)
+        {
+            BeginPlayerAction();
+            return;
+        }
+
+        // switch without ending turn
+        if (isForcedSwitch)
+        {
+            Logic.SwitchPokemonImmediate(Logic.ActivePokemons()[forcedSwitchIndex], selection);
+            MoveToNextForcedSwitch();
+            return;
+        }
+
+        // switch instead of using a move
+        AddSwitchCommand(selection);
     }
 
-    void BeginPlayerAction(bool immediate = false)
+    /// <summary>
+    /// This Pokemon will be switched out, and it will not use a move.
+    /// </summary>
+    public void AddSwitchCommand(Pokemon switchedIn)
+    {
+        switchQueue.Add(new SwitchCommand(switchedIn, order[orderIndex]));
+        moveQueue.Add(null);
+        MoveToNextInOrder();
+    }
+
+    /// <summary>
+    /// This Pokemon will use a move, and it will not be switched out.
+    /// </summary>
+    public void AddMoveCommand(Move move, Pokemon target)
+    {
+        moveQueue.Add(new MoveCommand(move, order[orderIndex], target));
+        switchQueue.Add(null);
+        MoveToNextInOrder();
+    }
+
+    /// <summary>
+    /// This Pokemon will use a move, and it will not be switched out.
+    /// </summary>
+    public void AddMoveCommand(Move move)
+    {
+        moveQueue.Add(new MoveCommand(move, order[orderIndex]));
+        switchQueue.Add(null);
+        MoveToNextInOrder();
+    }
+
+    /// <summary>
+    /// Moves directed at the Pokemon switched out will now be directed at the Pokemon switched in.
+    /// </summary>
+    public void UpdateMoveTargets(SwitchCommand cmd)
+    {
+        foreach (var moveCommand in moveQueue)
+        {
+            if (moveCommand != null && moveCommand.Target == cmd.SwitchedOut)
+                moveCommand.Target = cmd.SwitchedIn;
+        }
+    }
+
+    /// <summary>
+    /// Update battle graphics to represent the Pokemon switched in.
+    /// </summary>
+    public void RegisterSwitch(Pokemon switchedIn)
+    {
+        if (switchedIn.IsAlly)
+        {
+            playerUnit.Setup(switchedIn);
+            hud.NotifySwitch(switchedIn);
+            chatbox.RefreshMoves(switchedIn);
+        }
+        else
+        {
+            enemyUnit.Setup(switchedIn);
+            hud.NotifySwitch(switchedIn);
+        }
+    }
+
+    private void BeginPlayerAction(bool immediate = false)
     {
         //AI placeholder
         if (!order[orderIndex].IsAlly)
-        {
-            //Debug.Log("picking for " + order[orderIndex].Name);
-            moveQueue.Add(new MoveCommand(RandomNonNullElement(order[orderIndex].Moves), enemyUnit.Pokemon, playerUnit.Pokemon));
-            orderIndex++;
-            if (orderIndex >= order.Count) BeginTurn();
-        }
+            AddMoveCommand(RandomNonNullElement(order[orderIndex].Moves), playerUnit.Pokemon);
         else
         {
             chatbox.SetState(ChatState.SelectAction);
             StartCoroutine(chatbox.Print($"What will {order[orderIndex].Name} do?", immediate));
-            battleState = BattleState.SelectingAction;
+            BattleState = BattleState.SelectingAction;
         }
     }
 
-    void BeginPlayerMove()
+    private void BeginPlayerMove()
     {
         chatbox.SetState(ChatState.SelectMove);
-        battleState = BattleState.SelectingMove;
+        BattleState = BattleState.SelectingMove;
     }
 
-    void BeginTurn()
+    private void BeginTurn()
     {
         chatbox.SetState(ChatState.ChatOnly);
-        battleState = BattleState.TurnHappening;
-        PerformTurn();
+        BattleState = BattleState.TurnHappening;
+        StartCoroutine(Logic.Turn(moveQueue, switchQueue));
     }
 
     private IEnumerator BeginSwitch()
     {
-        battleState = BattleState.Idle;
+        BattleState = BattleState.Idle;
         yield return hud.FadeOut();
         battleCanvas.SetActive(false);
         partyCanvas.SetActive(true);
-        party.Init(Logic);
+        party.Init(isForcedSwitch);
         yield return hud.FadeIn();
+    }
+
+    /// <summary>
+    /// Moves to the next Pokemon in the order. If it was the final Pokemon, begins the turn.
+    /// </summary>
+    private void MoveToNextInOrder()
+    {
+        // reset pointers
+        chatbox.actions[actionIndex].color = Color.black;
+        chatbox.moves[moveIndex].color = Color.black;
+        actionIndex = 0;
+        moveIndex = 0;
+
+        if (orderIndex + 1 >= order.Count) // all choices made, begin turn
+        {
+            BeginTurn();
+        }
+        else // move to next
+        {
+            orderIndex++;
+            BeginPlayerAction();
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (battleState == BattleState.SelectingAction)
-            ActionPicker();
-        else if (battleState == BattleState.SelectingMove)
-            MovePicker();
+        switch (BattleState)
+        {
+            case BattleState.SelectingAction:
+                ActionPicker();
+                break;
+            case BattleState.SelectingMove:
+                MovePicker();
+                break;
+        }
     }
 
-    void ActionPicker()
+    private void ActionPicker()
     {
         var oldIndex = actionIndex;
         chatbox.actions[actionIndex].color = Color.black;
@@ -193,6 +357,7 @@ public class Battle : MonoBehaviour
                     BeginPlayerMove();
                     break;
                 case 1:
+                    isForcedSwitch = false;
                     StartCoroutine(BeginSwitch());
                     break;
                 case 2:
@@ -201,7 +366,7 @@ public class Battle : MonoBehaviour
         }
     }
 
-    void MovePicker()
+    private void MovePicker()
     {
         var oldIndex = moveIndex;
         chatbox.moves[moveIndex].color = Color.black;
@@ -235,17 +400,7 @@ public class Battle : MonoBehaviour
             if (chatbox.IsBusy) return;
 
             chatSound.Play();
-            moveQueue.Add(new MoveCommand(order[orderIndex].Moves[moveIndex], order[orderIndex], enemyUnit.Pokemon)); //placeholder
-            if (orderIndex + 1 >= order.Count) // all choices made, begin turn
-            {
-                BeginTurn();
-            }
-            else // move to next
-            {
-                orderIndex++;
-                BeginPlayerAction();
-            }
-
+            AddMoveCommand(order[orderIndex].Moves[moveIndex], enemyUnit.Pokemon);
         }
     }
 }

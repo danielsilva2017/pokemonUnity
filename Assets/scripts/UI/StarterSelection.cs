@@ -4,14 +4,14 @@ using UnityEngine;
 
 public class StarterSelection : MonoBehaviour
 {
-    private Chatbox chatbox;
+    public OverworldDialog chatbox;
 
     // Start is called before the first frame update
     void Start()
     {
-        chatbox = GameObject.Find("Chatbox").GetComponent<Chatbox>();
+        Application.targetFrameRate = 60;
         chatbox.Show();
-        chatbox.ShowTextSilent("Which Pokemon will you choose?");
+        chatbox.PrintSilent("Which Pokemon will you choose?");
     }
 
     // Update is called once per frame

@@ -6,17 +6,18 @@ using UnityEngine;
 public class Item : MonoBehaviour
 {
     public ItemType type;
-    public AudioSource audioSource;
+    public OverworldDialog chatbox;
+    public AudioSource collectedSound;
 
-    protected PlayerMove player;
+    protected PlayerLogic player;
     protected bool isInteracting;
 
-    private Chatbox chatbox;
+    public bool IsCollected { get; set; }
 
     // Start is called before the first frame update
     void Start()
     {
-        chatbox = GameObject.Find("Chatbox").GetComponent<Chatbox>();
+
     }
 
     // Update is called once per frame
@@ -25,23 +26,24 @@ public class Item : MonoBehaviour
         if (!isInteracting) return;
 
         // drop input
-        if (chatbox.IsBusy()) return;
+        if (chatbox.IsBusy) return;
 
         if (Input.GetKeyDown(KeyCode.Z))
         {
             isInteracting = false;
             player.EndInteraction();
+            IsCollected = true;
             chatbox.Hide();
             Destroy(gameObject);
         }
     }
 
-    public void Collect(PlayerMove player)
+    public void Collect(PlayerLogic player)
     {
-        audioSource.Play();
+        collectedSound.Play();
         this.player = player;
         chatbox.Show();
-        chatbox.ShowTextSilent("You got a <color=#0066cc>" + TypeToString() + "</color>!");
+        chatbox.PrintSilent($"You got a <color=#0066cc>{TypeToString()}</color>!");
         //add item to bag here
         isInteracting = true;
     }

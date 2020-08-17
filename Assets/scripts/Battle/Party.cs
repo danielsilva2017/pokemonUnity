@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using static Utils;
 
 public class Slot
 {
@@ -12,7 +13,7 @@ public class Slot
     public Text Health { get; set; }
     public Image HealthBar { get; set; }
     public Image HealthBarSelected { get; set; }
-    public SpriteRenderer Status { get; set; }
+    public Image Status { get; set; }
     public Image Background { get; set; }
 
     public Slot(GameObject gameObject)
@@ -23,7 +24,7 @@ public class Slot
         Health = gameObject.transform.GetChild(3).GetComponent<Text>();
         HealthBar = gameObject.transform.GetChild(4).GetComponent<Image>();
         HealthBarSelected = gameObject.transform.GetChild(5).GetComponent<Image>();
-        Status = gameObject.transform.GetChild(6).GetComponent<SpriteRenderer>();
+        Status = gameObject.transform.GetChild(6).GetComponent<Image>();
         Background = gameObject.GetComponent<Image>();
     }
 }
@@ -36,6 +37,8 @@ public class Party : MonoBehaviour
     public Dialog chatbox;
     public AudioSource chatSound;
     public SpriteRenderer transition;
+    public Battle battle;
+    public HUD hud;
 
     private Slot[] slots = new Slot[6];
     private Sprite[] slotBackgrounds; // selected, not selected, none, selected dead, not selected dead
@@ -43,6 +46,7 @@ public class Party : MonoBehaviour
     private int selectionIndex;
     private int amountInParty;
     private bool playerIsSwitching;
+    private bool isForcedSwitch; // whether player will have to choose a move right after switching
 
     // Start is called before the first frame update
     void Start()
@@ -52,9 +56,6 @@ public class Party : MonoBehaviour
 
         for (var i = 0; i < 6; i++)
             slots[i] = new Slot(partyMemberObjects[i]);
-
-        chatbox.SetState(ChatState.Party);
-        StartCoroutine(chatbox.Print("Select your Pokemon.", true));
     }
 
     // Update is called once per frame
@@ -65,27 +66,47 @@ public class Party : MonoBehaviour
         SwitchPicker();
     }
 
-    public void Init(BattleLogic logic)
+    public void Init(bool forcedSwitch)
     {
-        for (var i = 0; i < logic.ActiveAllies.Count; i++)
+        chatbox.SetState(ChatState.Party);
+        StartCoroutine(chatbox.Print("Select your Pokemon.", true));
+
+        // reset pointer
+        selectionIndex = 0;
+
+        // add the pokemons in the field
+        for (var i = 0; i < battle.Logic.ActiveAllies.Count; i++)
         {
-            var pkmn = logic.ActiveAllies[i];
+            var pkmn = battle.Logic.ActiveAllies[i];
             var slot = slots[i];
             FillSlot(pkmn, slot, i == 0);
         }
 
-        for (var i = 0; i < logic.PartyAllies.Count; i++)
+        // add the pokemons not in the field
+        for (var i = 0; i < battle.Logic.PartyAllies.Count; i++)
         {
-            var pkmn = logic.PartyAllies[i];
-            var slot = slots[i + logic.ActiveAllies.Count];
+            var pkmn = battle.Logic.PartyAllies[i];
+            var slot = slots[i + battle.Logic.ActiveAllies.Count];
             FillSlot(pkmn, slot, false);
         }
 
-        for (var i = logic.ActiveAllies.Count + logic.PartyAllies.Count; i < 6; i++)
+        // fill the remaining slots with nothing
+        for (var i = battle.Logic.ActiveAllies.Count + battle.Logic.PartyAllies.Count; i < 6; i++)
             EmptySlot(slots[i]);
 
-        amountInParty = logic.ActiveAllies.Count + logic.PartyAllies.Count;
+        amountInParty = battle.Logic.ActiveAllies.Count + battle.Logic.PartyAllies.Count;
         playerIsSwitching = true;
+        isForcedSwitch = forcedSwitch;
+    }
+
+    private IEnumerator EndSwitch(Pokemon selection)
+    {
+        playerIsSwitching = false;
+        yield return hud.FadeOut();
+        partyCanvas.SetActive(false);
+        battleCanvas.SetActive(true);
+        yield return hud.FadeIn();
+        battle.NotifySwitchPerformed(selection);
     }
 
     private void SwitchPicker()
@@ -106,13 +127,41 @@ public class Party : MonoBehaviour
             RemoveHighlight(slots[oldIndex]);
         }
 
+        // back to actions
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            if (chatbox.IsBusy) return;
+
+            chatSound.Play();
+            if (isForcedSwitch)
+            {
+                StartCoroutine(chatbox.Print("You need to select a Pokemon!"));
+                return;
+            }
+
+            StartCoroutine(EndSwitch(null));
+            return;
+        }
+
         if (Input.GetKeyDown(KeyCode.Z))
         {
             if (chatbox.IsBusy) return;
 
             chatSound.Play();
             if (slots[selectionIndex].Pokemon.Status == Status.Fainted)
+            {
                 StartCoroutine(chatbox.Print($"{slots[selectionIndex].Pokemon.Name} is unable to fight!"));
+                return;
+            }
+
+            if (battle.Logic.ActiveAllies.Contains(slots[selectionIndex].Pokemon))
+            {
+                StartCoroutine(chatbox.Print($"{slots[selectionIndex].Pokemon.Name} is already in the fight!"));
+                return;
+            }
+
+            // actually perform the selection
+            StartCoroutine(EndSwitch(slots[selectionIndex].Pokemon));
         }
     }
 
@@ -151,17 +200,25 @@ public class Party : MonoBehaviour
         if (isSelected)
         {
             slot.HealthBar.enabled = false;
+            slot.HealthBarSelected.enabled = true;
             slot.HealthBarSelected.transform.localScale = new Vector3(((float)pokemon.Health) / pokemon.MaxHealth, 1f, slot.HealthBarSelected.transform.localScale.z);
             slot.Background.sprite = pokemon.Status == Status.Fainted ? slotBackgrounds[4] : slotBackgrounds[0];
         }
         else
         {
             slot.HealthBarSelected.enabled = false;
+            slot.HealthBar.enabled = true;
             slot.HealthBar.transform.localScale = new Vector3(((float)pokemon.Health) / pokemon.MaxHealth, 1f, slot.HealthBar.transform.localScale.z);
             slot.Background.sprite = pokemon.Status == Status.Fainted ? slotBackgrounds[3] : slotBackgrounds[1];
         }
 
-        slot.Status.sprite = pokemon.Status == Status.None ? null : statuses[(int) pokemon.Status];  
+        if (pokemon.Status == Status.None)
+            MakeInvisible(slot.Status);
+        else
+        {
+            MakeVisible(slot.Status);
+            slot.Status.sprite = statuses[(int)pokemon.Status];
+        }
     }
 
     private void EmptySlot(Slot slot)

@@ -16,6 +16,7 @@ public class Pokemon : IComparable<Pokemon>
     public Gender Gender { get; set; }
     public Status Status { get; set; }
     public bool CanAttack { get; set; }
+    public bool WasForcedSwitch { get; set; } // whether it joined the fight as the result of a forced switch
     public List<Pokemon> ExpCandidates { get; set; } // those who will get xp if this pokemon dies
     public Move LastHitByMove { get; set; } // last move to successfully target this pokemon
     public Pokemon LastHitByUser { get; set; } // last pokemon to successfully target this pokemon

@@ -1,22 +1,19 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class Unit : MonoBehaviour
 {
     public GameObject animatable;
-    public PokemonBase skeleton;
-    public int level;
-    public Gender gender;
-    public bool isAlly;
 
     private Animator animator;
 
     public Pokemon Pokemon { get; set; }
 
-    public void Setup()
+    public void Setup(Pokemon pokemon)
     {
-        Pokemon = new Pokemon(skeleton, level, gender);
+        Pokemon = pokemon;
         animator = animatable.GetComponent<Animator>();
 
         animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(GetAnimationPath());
@@ -24,9 +21,9 @@ public class Unit : MonoBehaviour
 
     private string GetAnimationPath()
     {
-        return string.Format("Images/{0}{1}/ctrl", skeleton.dexNumber, isAlly ? "b" : "");
+        return string.Format("Images/{0}{1}/ctrl", Pokemon.Skeleton.dexNumber, Pokemon.IsAlly ? "b" : "");
     }
     
-    public string Name { get { return skeleton.pokemonName; } }
+    public string Name { get { return Pokemon.Skeleton.pokemonName; } }
     public Move[] Moves { get { return Pokemon.Moves; } }
 }

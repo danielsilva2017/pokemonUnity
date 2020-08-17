@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using static Utils;
 
 public class HUD : MonoBehaviour
 {
@@ -14,8 +15,8 @@ public class HUD : MonoBehaviour
     public Text enemyLevel;
     public Image allyHUD;
     public Image enemyHUD;
-    public SpriteRenderer allyStatus;
-    public SpriteRenderer enemyStatus; 
+    public Image allyStatus;
+    public Image enemyStatus; 
     public GameObject allyHealthBar;
     public GameObject allyExpBar;
     public GameObject enemyHealthBar;
@@ -32,7 +33,7 @@ public class HUD : MonoBehaviour
     private float lastEnemyHealthBar;
 
     private readonly float introSpeed = 0.8f;
-    private readonly float updateSpeed = 2f;
+    private readonly float updateSpeed = 160f; // amount of frames required to fill/empty a bar
     private readonly float transitionSpeed = 10f;
 
     // Start is called before the first frame update
@@ -44,23 +45,52 @@ public class HUD : MonoBehaviour
     public void Init(Pokemon ally, Pokemon enemy)
     {
         transition.enabled = false;
-        this.ally = ally; ally.Health -= 5;
-        this.enemy = enemy; enemy.Health -= 5;
+        InitAlly(ally);
+        InitEnemy(enemy);
+    }
+
+    /// <summary>
+    /// Notify the HUD that a Pokemon was switched in.
+    /// </summary>
+    public void NotifySwitch(Pokemon switchedIn)
+    {
+        if (switchedIn.IsAlly)
+            InitAlly(switchedIn);
+        else
+            InitEnemy(switchedIn);
+    }
+
+    /// <summary>
+    /// Make all necessary preparations to display the ally's info.
+    /// </summary>
+    private void InitAlly(Pokemon ally)
+    {
+        this.ally = ally;
         allyName.text = Bold(GetGenderedName(ally));
         allyLevel.text = Bold(ally.Level.ToString());
+
+        lastAllyHealth = ally.Health;
+        lastAllyHealthBar = ((float)ally.Health) / ally.MaxHealth;
+        lastAllyExpBar = ((float)ally.Experience - ally.CurLevelExp) / (ally.NextLevelExp - ally.CurLevelExp);
+
+        StartCoroutine(UpdateAllyHealth(true));
+        StartCoroutine(UpdateAllyExp(true));
+        UpdateStatus(ally, allyStatus);
+    }
+
+    /// <summary>
+    /// Make all necessary preparations to display the enemy's info.
+    /// </summary>
+    private void InitEnemy(Pokemon enemy)
+    {
+        this.enemy = enemy;
         enemyName.text = Bold(GetGenderedName(enemy));
         enemyLevel.text = Bold(enemy.Level.ToString());
 
-        lastAllyHealth = ally.Health;
-        lastAllyHealthBar = ((float) ally.Health) / ally.MaxHealth;
-        lastAllyExpBar = ((float) ally.Experience - ally.CurLevelExp) / (ally.NextLevelExp - ally.CurLevelExp);
         lastEnemyHealthBar = ((float)enemy.Health) / enemy.MaxHealth;
 
-        StartCoroutine(UpdateAllyHealth(true));
-        StartCoroutine(UpdateAllyHealthBar(true));
-        StartCoroutine(UpdateAllyExpBar(true));
-        StartCoroutine(UpdateEnemyHealthBar(true));
-        UpdateStatuses();
+        StartCoroutine(UpdateEnemyHealth(true));
+        UpdateStatus(enemy, enemyStatus);
     }
 
     private string GetGenderedName(Pokemon pokemon)
@@ -94,16 +124,19 @@ public class HUD : MonoBehaviour
             bar.transform.localScale = new Vector3(((float)value) / max, 1f, bar.transform.localScale.z);
             yield break;
         }
-
-        var frames = 1 / updateSpeed * 100;
+        
         var diff = ((float)value / max) - lastValue; // scale.x diff
+        // stop when there's nothing to update - consider fp inaccuracies
+        if (Math.Abs(diff) <= 0.0001f) yield break;
+
+        var frames = Math.Abs(diff) * updateSpeed;
 
         for (var i = 0; i <= frames; i++)
         {
             bar.transform.localScale = new Vector3(lastValue + diff * i / frames, 1f, bar.transform.localScale.z);
             yield return null;
         }
-
+        
         // ensure correct number is shown at the end
         bar.transform.localScale = new Vector3(((float)value) / max, 1f, bar.transform.localScale.z);
     }
@@ -113,25 +146,27 @@ public class HUD : MonoBehaviour
         return $"<b>{text}</b>";
     }
 
-    public IEnumerator UpdateAllyHealthBar(bool immediate = false)
-    {
-        yield return UpdateBar(allyHealthBar, ally.Health, ally.MaxHealth, lastAllyHealthBar, immediate);
-        lastAllyHealthBar = ((float)ally.Health) / ally.MaxHealth;
-    }
-
-    public IEnumerator UpdateEnemyHealthBar(bool immediate = false)
+    /// <summary>
+    /// Updates the enemy's health bar.
+    /// </summary>
+    public IEnumerator UpdateEnemyHealth(bool immediate = false)
     {
         yield return UpdateBar(enemyHealthBar, enemy.Health, enemy.MaxHealth, lastEnemyHealthBar, immediate);
         lastEnemyHealthBar = ((float)enemy.Health) / enemy.MaxHealth;
     }
 
-    public IEnumerator UpdateAllyExpBar(bool immediate = false)
+    /// <summary>
+    /// Updates the ally's exp bar.
+    /// </summary>
+    public IEnumerator UpdateAllyExp(bool immediate = false)
     {
         yield return UpdateBar(allyExpBar, ally.Experience - ally.CurLevelExp, ally.NextLevelExp - ally.CurLevelExp, lastAllyExpBar, immediate);
         lastAllyExpBar = ((float)ally.Experience - ally.CurLevelExp) / (ally.NextLevelExp - ally.CurLevelExp);
     }
 
-    // uses dummy values to simulate a level up without doing exp calculations
+    /// <summary>
+    /// Fills the ally's exp bar. Uses dummy values to simulate a level up without doing exp calculations.
+    /// </summary>
     public IEnumerator FillAllyExpBar(bool immediate = false)
     {
         yield return UpdateBar(allyExpBar, 1, 1, lastAllyExpBar, immediate);
@@ -140,44 +175,61 @@ public class HUD : MonoBehaviour
         lastAllyExpBar = 0f;
     }
 
+    /// <summary>
+    /// Updates the ally's health bar and health display (e.g. 30/32).
+    /// </summary>
     public IEnumerator UpdateAllyHealth(bool immediate = false)
     {
         if (immediate)
         {
             allyHealth.text = Bold($"{ally.Health}/{ally.MaxHealth}");
             lastAllyHealth = ally.Health;
+            allyHealthBar.transform.localScale = new Vector3(((float)ally.Health) / ally.MaxHealth, 1f, allyHealthBar.transform.localScale.z);
+            lastAllyHealthBar = ((float)ally.Health) / ally.MaxHealth;
             yield break;
         }
 
-        var frames = 1 / updateSpeed * 100;
-        var diff = ally.Health - lastAllyHealth;
+        var numdiff = ally.Health - lastAllyHealth;
+        // stop when there's nothing to update - consider fp inaccuracies
+        if (Math.Abs(numdiff) <= 0.0001f) yield break;
+        
+        var ratio = ((float)ally.Health) / ally.MaxHealth;
+        var bardiff = ratio - lastAllyHealthBar; // scale.x diff
+        var frames = Math.Abs(bardiff) * updateSpeed;
 
-        for (var i=0; i<=frames; i++)
+        for (var i = 0; i <= frames; i++)
         {
-            allyHealth.text = Bold($"{Math.Max(0, Mathf.FloorToInt(lastAllyHealth + diff * i / frames))}/{ally.MaxHealth}");
+            allyHealth.text = Bold($"{Math.Max(0, Mathf.FloorToInt(lastAllyHealth + numdiff * i / frames))}/{ally.MaxHealth}");
+            allyHealthBar.transform.localScale = new Vector3(lastAllyHealthBar + bardiff * i / frames, 1f, allyHealthBar.transform.localScale.z);
             yield return null;
         }
 
-        // ensure correct number is shown at the end
+        // ensure correct numbers are shown at the end
         allyHealth.text = Bold($"{ally.Health}/{ally.MaxHealth}");
+        allyHealthBar.transform.localScale = new Vector3(ratio, 1f, allyHealthBar.transform.localScale.z);
 
         lastAllyHealth = ally.Health;
+        lastAllyHealthBar = ratio;
     }
 
+    /// <summary>
+    /// Updates the ally and enemy's statuses.
+    /// </summary>
     public void UpdateStatuses()
     {
         UpdateStatus(ally, allyStatus);
         UpdateStatus(enemy, enemyStatus);
     }
 
-    private void UpdateStatus(Pokemon pokemon, SpriteRenderer statusHUD)
+    private void UpdateStatus(Pokemon pokemon, Image statusHUD)
     {
         if (pokemon.Status == Status.None)
         {
-            statusHUD.sprite = null;
+            MakeInvisible(statusHUD);
             return;
         }
 
+        MakeVisible(statusHUD);
         statusHUD.sprite = statuses[(int) pokemon.Status];
     }
 
