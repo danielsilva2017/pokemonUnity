@@ -11,44 +11,58 @@ public static class SceneInfo
 {
     private static BattleInfo battleInfo;
     private static OverworldInfo overworldInfo;
+    private static PlayerInfo playerInfo;
 
-    public static void SetTrainerBattleInfo(PlayerLogic player, Trainer trainer, List<Pokemon> enemies, int battleSize = 1, Weather weather = Weather.None)
+    public static void BeginTrainerBattle(PlayerLogic playerLogic, Trainer trainer, List<Pokemon> enemies, int battleSize = 1, Weather weather = Weather.None)
     {
         battleInfo = new BattleInfo
         {
             Trainer = trainer,
-            Allies = player.Player.Pokemons,
+            Allies = playerLogic.Player.Pokemons,
             Enemies = enemies,
             BattleSize = battleSize,
             Weather = weather,
             IsTrainerBattle = true
         };
 
-        player.overworldManager.CreateSnapshot();
+        SetOverworldInfo(playerLogic);
+        SetPlayerInfo(playerLogic);
+        SceneManager.LoadScene(3);
     }
 
-    public static void SetWildBattleInfo(PlayerLogic player, Pokemon enemy, Weather weather = Weather.None)
+    public static void BeginWildBattle(PlayerLogic playerLogic, Pokemon enemy, Weather weather = Weather.None)
     {
         battleInfo = new BattleInfo
         {
-            Allies = player.Player.Pokemons,
+            Allies = playerLogic.Player.Pokemons,
             Enemies = new List<Pokemon>() { enemy },
             BattleSize = 1,
             Weather = weather,
             IsTrainerBattle = false
         };
-        player.overworldManager.CreateSnapshot();
+
+        SetOverworldInfo(playerLogic);
+        SetPlayerInfo(playerLogic);
+        SceneManager.LoadScene(3);
     }
 
-    public static void SetOverworldInfo(PlayerLogic player, List<NPC> characters, List<Item> items, int scene)
+    private static void SetOverworldInfo(PlayerLogic playerLogic)
     {
         overworldInfo = new OverworldInfo
         {
-            PlayerPosition = player.transform.position,
-            PlayerDirection = player.Direction,
-            Characters = characters,
-            Items = items,
-            Scene = scene
+            Characters = playerLogic.overworld.characters,
+            Items = playerLogic.overworld.items,
+            Scene = playerLogic.gameObject.scene.buildIndex
+        };
+    }
+
+    private static void SetPlayerInfo(PlayerLogic playerLogic)
+    {
+        playerInfo = new PlayerInfo
+        {
+            Player = playerLogic.Player,
+            Position = playerLogic.transform.position,
+            Direction = playerLogic.Direction
         };
     }
 
@@ -62,6 +76,11 @@ public static class SceneInfo
         return overworldInfo;
     }
 
+    public static PlayerInfo GetPlayerInfo()
+    {
+        return playerInfo;
+    }
+
     public static void DeleteBattleInfo()
     {
         battleInfo = null;
@@ -70,6 +89,11 @@ public static class SceneInfo
     public static void DeleteOverworldInfo()
     {
         overworldInfo = null;
+    }
+
+    public static void DeletePlayerInfo()
+    {
+        playerInfo = null;
     }
 }
 
@@ -91,9 +115,14 @@ public class BattleInfo
 
 public class OverworldInfo
 {
-    public Vector3 PlayerPosition { get; set; }
-    public Direction PlayerDirection { get; set; }
     public List<NPC> Characters { get; set; }
     public List<Item> Items { get; set; }
     public int Scene { get; set; }
+}
+
+public class PlayerInfo
+{
+    public Player Player { get; set; }
+    public Vector3 Position { get; set; }
+    public Direction Direction { get; set; }
 }

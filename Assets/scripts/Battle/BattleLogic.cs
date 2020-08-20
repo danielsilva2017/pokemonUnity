@@ -539,7 +539,7 @@ public class BattleLogic
         while (targetLevel > receiver.Level) // skipping levels
         {
             receiver.LevelUp();
-            if (ActiveAllies.Contains(receiver)) // level up offscreen
+            if (ActiveAllies.Contains(receiver)) // otherwise level up offscreen
             {
                 yield return battleUI.NotifyUpdateExp(true);
                 yield return battleUI.NotifyUpdateHealth(true);

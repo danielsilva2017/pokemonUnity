@@ -17,9 +17,9 @@ TagManager:
   - 
   - Solids
   - Grass
+  - Jumpable
+  - No Jumping
   - Chat
-  - 
-  - 
   - 
   - 
   - 
@@ -51,6 +51,9 @@ TagManager:
     locked: 0
   - name: Player
     uniqueID: 3793200409
+    locked: 0
+  - name: Half Floor
+    uniqueID: 693834999
     locked: 0
   - name: Interface
     uniqueID: 1493954119

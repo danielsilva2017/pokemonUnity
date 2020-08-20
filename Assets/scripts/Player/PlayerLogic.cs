@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
+using UnityEngine.Tilemaps;
+using static Utils;
 
 public enum Direction
 {
@@ -11,14 +13,19 @@ public class PlayerLogic : MonoBehaviour
 {
     // Start is called before the first frame update
     public float moveSpeed;
-    public LayerMask solidObjectsLayer;
-    public LayerMask grass;
-    public OverworldManager overworldManager;
+    public LayerMask solidLayer;  // solid objects
+    public LayerMask grassLayer;  // grass
+    public LayerMask waterLayer;  // water
+    public LayerMask jumpLayer;   // can jump over
+    public LayerMask noJumpLayer; // walkable, cannot jump over something from here
+    public Overworld overworld;
     public AudioSource audioSource;
 
     private bool isMoving;
     private bool isRunning;
-    private bool isInteractionFinished; // used by npc to signal dialogue is over
+    private bool isJumping;
+    private bool isSurfing;
+    private bool isInteractionFinished; // used by interactable to signal dialogue is over
     private GameObject interactable;
     private Vector2 input;
     private Animator animator;
@@ -29,20 +36,36 @@ public class PlayerLogic : MonoBehaviour
     void Start()
     {
         Application.targetFrameRate = 60;
-        Direction = Direction.Down;
+        var playerInfo = SceneInfo.GetPlayerInfo();
+
+        if (playerInfo == null) // create new
+        {
+            Direction = Direction.Down;
+            Player = new Player();
+        }
+        else // load state
+        {
+            FaceDirection(playerInfo.Direction);
+            Player = new Player(playerInfo.Player);
+            transform.position = playerInfo.Position;
+            SceneInfo.DeletePlayerInfo();
+        }
+        
         isInteractionFinished = true;
-        Player = new Player();
     }
 
-    void Awake(){
+    void Awake()
+    {
         animator = GetComponent<Animator>();
     }
 
-    void Update(){
-        if (!isInteractionFinished) return; //drop input
+    void Update()
+    {
+        if (!isInteractionFinished) return; // drop inputs
 
-        if(!isMoving){
-            //interact with something if it exists
+        if (!isMoving && !isJumping)
+        {
+            // interact with something if it exists
             if (Input.GetKeyDown(KeyCode.Z) && interactable != null)
             {
                 Interact();
@@ -51,23 +74,25 @@ public class PlayerLogic : MonoBehaviour
 
             input.x = Input.GetAxisRaw("Horizontal");
             input.y = Input.GetAxisRaw("Vertical");
+            var lastDirection = Direction;
 
             if (input.x != 0)
             {
                 input.y = 0;
-                interactable = null; //clear interaction; will be set again by trigger if one is available
+                interactable = null; // clear interaction; will be set again by trigger if one is available
                 Direction = input.x < 0 ? Direction.Left : Direction.Right;
             }
             else if (input.y != 0)
             {
                 input.x = 0;
-                interactable = null; //clear interaction; will be set again by trigger if one is available
+                interactable = null; // clear interaction; will be set again by trigger if one is available
                 Direction = input.y < 0 ? Direction.Down : Direction.Up;
             }
 
-            if(input != Vector2.zero){
-                animator.SetFloat("moveX",input.x);
-                animator.SetFloat("moveY",input.y);
+            if (input != Vector2.zero)
+            {
+                animator.SetFloat("moveX", input.x);
+                animator.SetFloat("moveY", input.y);
 
                 var targetPos = transform.position;
                 targetPos.x += input.x;
@@ -84,25 +109,58 @@ public class PlayerLogic : MonoBehaviour
         else if (Input.GetKeyUp(KeyCode.X))
             isRunning = false;
 
-        animator.SetBool("isRunning", isRunning);
         animator.SetBool("isMoving", isMoving);
+        animator.SetBool("isRunning", isRunning);
+        animator.SetBool("isJumping", isJumping);
     }
 
     // IEnumerator is used to do something over a period of time -  move current to target pos over a period of time
-    private IEnumerator Move(Vector3 targetPos){
+    private IEnumerator Move(Vector3 target)
+    {
         isMoving = true;
-        while ((targetPos - transform.position).sqrMagnitude > Mathf.Epsilon)
+
+        if (PositionIsLayer(target, jumpLayer))
+        {
+            isJumping = true;
+            target = GetJumpTarget(target);
+        }
+
+        while ((target - transform.position).sqrMagnitude > Mathf.Epsilon)
         {
             transform.position = Vector3.MoveTowards(
                 transform.position, 
-                targetPos,
-                moveSpeed * (isRunning ? 2 : 1) * Time.deltaTime
+                target,
+                moveSpeed * (isRunning && !isJumping ? 2 : 1) * Time.deltaTime
             ); 
             yield return null;
         }
-        transform.position = targetPos;
+
+        transform.position = target;
         isMoving = false;
+        isJumping = false;
+        
         CheckForPokemons();
+    }
+
+    private Vector3 GetJumpTarget(Vector3 originalTarget)
+    {
+        switch (Direction)
+        {
+            case Direction.Down:
+                originalTarget.y--;
+                return originalTarget;
+            case Direction.Up:
+                originalTarget.y++;
+                return originalTarget;
+            case Direction.Left:
+                originalTarget.x--;
+                return originalTarget;
+            case Direction.Right:
+                originalTarget.x++;
+                return originalTarget;
+            default:
+                return originalTarget;
+        }
     }
 
     public void FaceDirection(Direction direction)
@@ -110,16 +168,20 @@ public class PlayerLogic : MonoBehaviour
         switch (direction)
         {
             case Direction.Down:
+                animator.SetFloat("moveX", 0f);
                 animator.SetFloat("moveY", -1f);
                 break;
             case Direction.Up:
+                animator.SetFloat("moveX", 0f);
                 animator.SetFloat("moveY", 1f);
                 break;
             case Direction.Left:
                 animator.SetFloat("moveX", -1f);
+                animator.SetFloat("moveY", 0f);
                 break;
             case Direction.Right:
                 animator.SetFloat("moveX", 1f);
+                animator.SetFloat("moveY", 0f);
                 break;
         }
 
@@ -127,19 +189,24 @@ public class PlayerLogic : MonoBehaviour
     }
 
     // checks if the target Pos contains objects with SolidObjectsLayer, 0.2f is the offset radius
-    private bool IsWalkable(Vector3 targetPos){
-        if(Physics2D.OverlapCircle(targetPos,0.2f,solidObjectsLayer)!=null){
-            return false;
-        }
-        return true;
+    private bool IsWalkable(Vector3 target)
+    {
+        return !PositionIsLayer(target, solidLayer) && // solid block
+            !(PositionIsLayer(target, waterLayer) && !isSurfing) && // water when on foot
+            !(PositionIsLayer(target, jumpLayer) && PositionIsLayer(transform.position, noJumpLayer)); // trying to jump when not allowed
     }
 
-    private void CheckForPokemons(){
-        if(Physics2D.OverlapCircle(transform.position,0.2f,grass)!=null){
-            if(UnityEngine.Random.Range(1,101)<=10){
-                    Debug.Log("Pokemon Found");
-            }
+    private void CheckForPokemons()
+    {
+        if(PositionIsLayer(transform.position, grassLayer)){
+            if(Chance(overworld.wildPokemonChance))
+                SceneInfo.BeginWildBattle(this, overworld.GenerateGrassEncounter(), overworld.weather);
         }
+    }
+
+    private bool PositionIsLayer(Vector3 position, LayerMask layer)
+    {
+        return Physics2D.OverlapCircle(position, 0.2f, layer) != null;
     }
 
     private void Interact()
@@ -154,8 +221,7 @@ public class PlayerLogic : MonoBehaviour
             case "Item":
                 interactable.GetComponent<Item>().Collect(this);
                 break;
-        }
-        
+        } 
     }
 
     public void EndInteraction()

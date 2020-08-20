@@ -41,7 +41,6 @@ public class Trainer : NPC
 
     protected override void DoAction()
     {
-        SceneInfo.SetTrainerBattleInfo(PlayerLogic, this, party, 1, weather);
-        SceneManager.LoadScene(3);
+        SceneInfo.BeginTrainerBattle(PlayerLogic, this, party, 1, weather);
     }
 }

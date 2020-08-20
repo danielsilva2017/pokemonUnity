@@ -152,7 +152,9 @@ public class Battle : MonoBehaviour
                 break;
             case Outcome.Win:
                 StartCoroutine(Print("win"));
-                SceneInfo.GetBattleInfo().Trainer.IsDefeated = true;
+                var info = SceneInfo.GetBattleInfo();
+                Debug.Log("<>"+Logic.ActiveAllies[0].Experience);
+                if (info.IsTrainerBattle) info.Trainer.IsDefeated = true;
                 SceneManager.LoadScene(SceneInfo.GetOverworldInfo().Scene);
                 break;
             case Outcome.Loss:

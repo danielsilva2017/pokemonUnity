@@ -19,4 +19,11 @@ public class Player
         };
         Pokemons[0].Health -= 6;
     }
+
+    public Player(Player playerInfo)
+    {
+        Name = playerInfo.Name;
+        Pokemons = playerInfo.Pokemons;
+        Money = playerInfo.Money;
+    }
 }

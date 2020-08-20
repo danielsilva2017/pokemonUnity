@@ -54,9 +54,9 @@ public abstract class NPC : MonoBehaviour
         return dialogueIndex < dialogueList.Length ? dialogueList[dialogueIndex++] : null;
     }
 
-    public void Interact(PlayerLogic player)
+    public void Interact(PlayerLogic playerLogic)
     {
-        PlayerLogic = player;
+        PlayerLogic = playerLogic;
         chatbox.Show();
         chatbox.Print(NextDialogue());
         IsInteracting = true;
