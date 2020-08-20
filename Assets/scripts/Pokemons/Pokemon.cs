@@ -42,7 +42,7 @@ public class Pokemon : IComparable<Pokemon>
     private int level;
     private int exp;
 
-    public Pokemon(PokemonBase skeleton, int level, Gender gender, Status status = Status.None, bool canAttack = true)
+    public Pokemon(PokemonBase skeleton, int level, Gender? gender = null, Status status = Status.None, bool canAttack = true)
     {
         Skeleton = skeleton;
         Ability = new Ability(RandomElement(skeleton.learnableAbilities));
@@ -51,7 +51,7 @@ public class Pokemon : IComparable<Pokemon>
         Experience = GetExpFromLevel(level, ExpGroup);
         CurLevelExp = Experience;
         NextLevelExp = level + 1 >= 100 ? MaxExperience : GetExpFromLevel(level + 1, ExpGroup);
-        Gender = gender;
+        Gender = gender ?? RandomGender();
         Health = MaxHealth;
         Status = status;
         CanAttack = canAttack;
@@ -89,6 +89,15 @@ public class Pokemon : IComparable<Pokemon>
 
         if (selfSpeed == otherSpeed) return Chance(50) ? -1 : 1; // tie
         return Mathf.FloorToInt(otherSpeed - selfSpeed);
+    }
+
+    /// <summary>
+    /// Rolls a random gender for a Pokemon.
+    /// </summary>
+    private Gender RandomGender()
+    {
+        if (Skeleton.maleChance < 0) return Gender.None;
+        else return Chance(Skeleton.maleChance) ? Gender.Male : Gender.Female;
     }
 
     // converts base stat to an actual stat

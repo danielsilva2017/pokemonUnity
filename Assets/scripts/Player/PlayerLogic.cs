@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 using static Utils;
 
@@ -12,7 +11,7 @@ public enum Direction
 
 public class PlayerLogic : MonoBehaviour
 {
-    // Start is called before the first frame update
+    public Camera mainCamera;
     public float moveSpeed;
     public LayerMask solidLayer;  // solid objects
     public LayerMask grassLayer;  // grass
@@ -20,7 +19,12 @@ public class PlayerLogic : MonoBehaviour
     public LayerMask jumpLayer;   // can jump over
     public LayerMask noJumpLayer; // walkable, cannot jump over something from here
     public Overworld overworld;
-    public AudioSource audioSource;
+    public Image routeHeader;
+    public Text routeName;
+    public RectTransform routeShowPosition;
+    public RectTransform routeHidePosition;
+    public SpriteRenderer introEffect;
+    public AudioSource battleIntroSound;
     public Image sideMenu;
     public Text menuPokemon;
     public Text menuBag;
@@ -30,11 +34,12 @@ public class PlayerLogic : MonoBehaviour
     private bool isRunning;
     private bool isJumping;
     private bool isSurfing;
+    private bool isUsingMenu;
+    private bool isBusy;
     private bool isInteractionFinished; // used by interactable to signal dialogue is over
     private GameObject interactable;
     private Vector2 input;
     private Animator animator;
-    private bool isUsingMenu;
 
     public Direction Direction { get; set; }
     public Player Player { get; set; }
@@ -54,9 +59,11 @@ public class PlayerLogic : MonoBehaviour
             FaceDirection(playerInfo.Direction);
             Player = new Player(playerInfo.Player);
             transform.position = playerInfo.Position;
+            overworld = GameObject.Find(playerInfo.OverworldKey).GetComponent<Overworld>();
             SceneInfo.DeletePlayerInfo();
         }
-        
+
+        overworld.locationMusic.Play();
         isInteractionFinished = true;
     }
 
@@ -69,18 +76,16 @@ public class PlayerLogic : MonoBehaviour
     {
         if (!isInteractionFinished) return; // drop inputs
 
-    
-        if(Input.GetKeyUp(KeyCode.Return))
+        if (Input.GetKeyUp(KeyCode.Return)) // open/close side menu
         {
-            sideMenu.enabled=!sideMenu.enabled;
-            menuPokemon.enabled=!menuPokemon.enabled;
-            menuBag.enabled=!menuBag.enabled;
-            menuSave.enabled=!menuSave.enabled;
-            isUsingMenu=!isUsingMenu;
+            sideMenu.enabled = !sideMenu.enabled;
+            menuPokemon.enabled = !menuPokemon.enabled;
+            menuBag.enabled = !menuBag.enabled;
+            menuSave.enabled = !menuSave.enabled;
+            isUsingMenu = !isUsingMenu;
         }
-    
 
-        if (!isMoving && !isJumping && !isUsingMenu)
+        if (!isMoving && !isJumping && !isUsingMenu && !isBusy) // process movement if not busy
         {
             // interact with something if it exists
             if (Input.GetKeyDown(KeyCode.Z) && interactable != null)
@@ -216,14 +221,45 @@ public class PlayerLogic : MonoBehaviour
     private void CheckForPokemons()
     {
         if(PositionIsLayer(transform.position, grassLayer)){
-            if(Chance(overworld.wildPokemonChance))
-                SceneInfo.BeginWildBattle(this, overworld.GenerateGrassEncounter(), overworld.weather);
+            if (Chance(overworld.wildPokemonChance))
+                StartCoroutine(BeginWildBattle());
         }
     }
 
     private bool PositionIsLayer(Vector3 position, LayerMask layer)
     {
         return Physics2D.OverlapCircle(position, 0.2f, layer) != null;
+    }
+    
+    private IEnumerator BeginWildBattle()
+    {
+        isBusy = true; // stop inputs
+        overworld.locationMusic.Stop();
+        battleIntroSound.Play();
+        MakeInvisible(introEffect);
+        introEffect.transform.position = transform.position;
+
+        for (var i = mainCamera.orthographicSize; i <= 5f; i += 0.01f)
+        {
+            mainCamera.orthographicSize = i;
+            yield return null;
+        }
+
+        for (var i = mainCamera.orthographicSize; i >= 0.5f;)
+        {
+            if (i >= 2.5f) i -= 0.125f;
+            else if (i >= 1.75f) i -= 0.095f;
+            else if (i >= 1.25f) i -= 0.07f;
+            else if (i >= 0.75f) i -= 0.05f;
+            else i -= 0.03f;
+
+            mainCamera.orthographicSize = i;
+            introEffect.color = new Color(introEffect.color.r, introEffect.color.g, introEffect.color.b, introEffect.color.a + 0.025f);
+            battleIntroSound.volume -= 0.004f;
+            yield return null;
+        }
+        
+        SceneInfo.BeginWildBattle(this, overworld.GenerateGrassEncounter(), overworld.weather);
     }
 
     private void Interact()
@@ -243,14 +279,24 @@ public class PlayerLogic : MonoBehaviour
 
     public void EndInteraction()
     {
-        if (!audioSource.isPlaying) audioSource.Play();
         isInteractionFinished = true;
         // required due to the order in which update() functions are run
         if (interactable.tag == "Item") interactable = null;
     }
 
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.tag == "Area Border")
+        {
+            var border = other.gameObject.GetComponent<AreaBorder>();
+            if (border.overworld.locationName != overworld.locationName) // changed area
+                border.ChangeArea(this);
+        }
+    }
+
     void OnTriggerStay2D(Collider2D other)
     {
+        
         var selfPos = transform.position;
         var otherPos = other.gameObject.transform.position;
 

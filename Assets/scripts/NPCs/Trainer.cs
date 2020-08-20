@@ -36,7 +36,7 @@ public class Trainer : NPC
         party = new List<Pokemon>(pokemons.Length);
 
         foreach (var init in pokemons)
-            party.Add(CreatePokemon(init.speciesName, init.level, Chance(50) ? Gender.Male : Gender.Female));
+            party.Add(CreatePokemon(init.speciesName, init.level));
     }
 
     protected override void DoAction()

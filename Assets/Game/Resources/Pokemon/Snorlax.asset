@@ -25,6 +25,7 @@ MonoBehaviour:
   spdStat: 30
   expGroup: 4
   expStat: 189
+  maleChance: 87.5
   learnableAbilities:
   - {fileID: 11400000, guid: ed31c51450bda3a43b09acba758aebfb, type: 2}
   learnableMoves:

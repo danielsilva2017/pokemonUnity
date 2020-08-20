@@ -22,6 +22,7 @@ public class PokemonBase : ScriptableObject
     public int spdStat;
     public ExpGroup expGroup;
     public int expStat; //the base xp yield. https://bulbapedia.bulbagarden.net/wiki/List_of_Pok%C3%A9mon_by_effort_value_yield
+    public float maleChance; //0-100 chance of male. -1 = genderless
     public AbilityBase[] learnableAbilities;
     public LearnableMove[] learnableMoves;
 }

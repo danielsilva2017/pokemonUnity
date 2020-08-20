@@ -18,6 +18,7 @@ public class WildPokemon
 public class Overworld : MonoBehaviour
 {
     public string locationName;
+    public AudioSource locationMusic;
     public int wildPokemonChance; // 0-100 chance to roll a wild encounter per step on grass
     public Weather weather;
     public PlayerLogic player;
@@ -34,7 +35,7 @@ public class Overworld : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        var overworldInfo = SceneInfo.GetOverworldInfo();
+        var overworldInfo = SceneInfo.GetOverworldInfo(locationName);
 
         // load a saved state if any exists
         if (overworldInfo != null)
@@ -65,7 +66,7 @@ public class Overworld : MonoBehaviour
         }
 
         SceneInfo.DeleteBattleInfo();
-        SceneInfo.DeleteOverworldInfo();
+        SceneInfo.DeleteOverworldInfo(locationName);
     }
 
     public Pokemon GenerateGrassEncounter() { return grassEncounter.Generate(); }
@@ -104,8 +105,7 @@ public class Overworld : MonoBehaviour
                 index++;
             return new Pokemon(
                 skeletons[index],
-                RandomInt(entries[index].minLevel, entries[index].maxLevel),
-                Chance(50) ? Gender.Male : Gender.Female
+                RandomInt(entries[index].minLevel, entries[index].maxLevel)
             );
         }
     }

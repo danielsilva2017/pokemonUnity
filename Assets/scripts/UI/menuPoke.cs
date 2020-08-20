@@ -23,7 +23,7 @@ public class menuPoke: MonoBehaviour
         texts[0]=pokemon;
         texts[1]=bag;
         texts[2]=save;
-        Debug.Log(texts[0].text);
+        //Debug.Log(texts[0].text);
         AddHighlight(pokemon);
         Hide();
         

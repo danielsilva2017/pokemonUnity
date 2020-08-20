@@ -27,7 +27,19 @@ public class Utils
     /// </summary>
     public static bool Chance(int successChance)
     {
-        return RandomFloat() <= successChance / 100f;
+        if (successChance <= 0) return false;
+        else if (successChance >= 100) return true;
+        else return RandomFloat() <= successChance / 100f;
+    }
+
+    /// <summary>
+    /// Performs a roll with a certain chance (from 0 to 100) of succeeding.
+    /// </summary>
+    public static bool Chance(float successChance)
+    {
+        if (successChance <= 0) return false;
+        else if (successChance >= 100) return true;
+        else return RandomFloat() <= successChance / 100f;
     }
 
     /// <summary>
@@ -82,6 +94,14 @@ public class Utils
     }
 
     /// <summary>
+    /// Makes a sprite invisible.
+    /// </summary>
+    public static void MakeInvisible(SpriteRenderer sprite)
+    {
+        sprite.color = new Color(sprite.color.r, sprite.color.g, sprite.color.b, 0);
+    }
+
+    /// <summary>
     /// Makes an image visible.
     /// </summary>
     public static void MakeVisible(Image image)
@@ -92,10 +112,10 @@ public class Utils
     /// <summary>
     /// Creates a Pokemon given a species name.
     /// </summary>
-    public static Pokemon CreatePokemon(string speciesName, int level, Gender gender)
+    public static Pokemon CreatePokemon(string speciesName, int level)
     {
         var skeleton = Resources.Load<PokemonBase>($"Pokemon/{speciesName}");
-        return new Pokemon(skeleton, level, gender);
+        return new Pokemon(skeleton, level);
     }
 
     /// <summary>

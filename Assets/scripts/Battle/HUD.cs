@@ -99,16 +99,18 @@ public class HUD : MonoBehaviour
         return $"{pokemon.Name}{genderChar}";
     }
 
-    public IEnumerator IntroEffect()
+    public IEnumerator IntroEffect(AudioSource music)
     {
         HideAll();
 
         var frames = 1/introSpeed * 100;
         var introSprite = introEffect.GetComponent<SpriteRenderer>();
+        var initialVolume = music.volume;
 
         for (var i=frames; i>=0; i--)
         {
             introSprite.color = new Color(introSprite.color.r, introSprite.color.g, introSprite.color.b, i / frames);
+            music.volume = 1f - i / frames * (1f - initialVolume);
             yield return null;
         }
 

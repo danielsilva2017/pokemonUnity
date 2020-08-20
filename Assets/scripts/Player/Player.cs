@@ -14,8 +14,8 @@ public class Player
         Name = "the boss man";
         Pokemons = new List<Pokemon>()
         {
-            CreatePokemon("Bulbasaur", 9, Gender.Male),
-            CreatePokemon("Snorlax", 12, Gender.Male)
+            CreatePokemon("Bulbasaur", 9),
+            CreatePokemon("Snorlax", 12)
         };
         Pokemons[0].Health -= 6;
     }

@@ -71,13 +71,14 @@ public class Battle : MonoBehaviour
         // Battle intro
         BattleState = BattleState.Intro;
         StartCoroutine(BattleIntro());
+        music.volume = 0.75f;
         music.Play();
     }
 
     private IEnumerator BattleIntro()
     {
         chatbox.SetState(ChatState.None);
-        yield return hud.IntroEffect();  
+        yield return hud.IntroEffect(music);  
 
         chatbox.SetState(ChatState.ChatOnly);
         yield return Print($"Wild {enemyUnit.Name} appeared!");
@@ -152,10 +153,9 @@ public class Battle : MonoBehaviour
                 break;
             case Outcome.Win:
                 StartCoroutine(Print("win"));
-                var info = SceneInfo.GetBattleInfo();
-                Debug.Log("<>"+Logic.ActiveAllies[0].Experience);
-                if (info.IsTrainerBattle) info.Trainer.IsDefeated = true;
-                SceneManager.LoadScene(SceneInfo.GetOverworldInfo().Scene);
+                var battleInfo = SceneInfo.GetBattleInfo();
+                if (battleInfo.IsTrainerBattle) battleInfo.Trainer.IsDefeated = true;
+                SceneInfo.ReturnToOverworldFromBattle();
                 break;
             case Outcome.Loss:
                 StartCoroutine(Print("loss"));
