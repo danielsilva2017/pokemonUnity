@@ -2,6 +2,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.UI;
 using static Utils;
 
 public enum Direction
@@ -20,6 +21,10 @@ public class PlayerLogic : MonoBehaviour
     public LayerMask noJumpLayer; // walkable, cannot jump over something from here
     public Overworld overworld;
     public AudioSource audioSource;
+    public Image sideMenu;
+    public Text menuPokemon;
+    public Text menuBag;
+    public Text menuSave;
 
     private bool isMoving;
     private bool isRunning;
@@ -29,6 +34,7 @@ public class PlayerLogic : MonoBehaviour
     private GameObject interactable;
     private Vector2 input;
     private Animator animator;
+    private bool isUsingMenu;
 
     public Direction Direction { get; set; }
     public Player Player { get; set; }
@@ -63,7 +69,18 @@ public class PlayerLogic : MonoBehaviour
     {
         if (!isInteractionFinished) return; // drop inputs
 
-        if (!isMoving && !isJumping)
+    
+        if(Input.GetKeyUp(KeyCode.Return))
+        {
+            sideMenu.enabled=!sideMenu.enabled;
+            menuPokemon.enabled=!menuPokemon.enabled;
+            menuBag.enabled=!menuBag.enabled;
+            menuSave.enabled=!menuSave.enabled;
+            isUsingMenu=!isUsingMenu;
+        }
+    
+
+        if (!isMoving && !isJumping && !isUsingMenu)
         {
             // interact with something if it exists
             if (Input.GetKeyDown(KeyCode.Z) && interactable != null)
