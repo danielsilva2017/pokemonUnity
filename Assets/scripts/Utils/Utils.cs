@@ -190,7 +190,7 @@ public class Utils
     /// <summary>
     /// Calculates the damage a move will deal.
     /// </summary>
-    public static int CalcDamage(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount)
+    public static int CalcDamage(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
     {
         var crit = IsCrit(user.CritStage);
         var attack = move.Category == Category.Physical

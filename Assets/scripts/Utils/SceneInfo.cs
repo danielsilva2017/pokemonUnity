@@ -156,10 +156,6 @@ public class BattleInfo
     public int BattleSize { get; set; }
     public Weather Weather { get; set; }
     public bool IsTrainerBattle { get; set; }
-    public int Difficulty { get; set; } //unused for now
-    public int Money { get; set; } //unused for now
-    public string TrainerClass { get; set; } //unused for now
-    public string TrainerName { get; set; } //unused for now
     public AudioSource Music { get; set; } //unused for now
     public Image Background { get; set; } //unused for now
 }

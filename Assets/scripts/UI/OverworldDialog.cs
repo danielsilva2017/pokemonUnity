@@ -5,7 +5,7 @@ using UnityEngine.UI;
 
 public class OverworldDialog : MonoBehaviour
 {
-    public Image chatbox;
+    public GameObject chatbox;
     public Text chatText;
     public AudioSource buttonPress;
 
@@ -38,14 +38,12 @@ public class OverworldDialog : MonoBehaviour
 
     public void Show()
     {
-        chatbox.enabled = true;
-        chatText.enabled = true;
+        chatbox.SetActive(true);
     }
 
     public void Hide()
     {
-        chatbox.enabled = false;
-        chatText.enabled = false;
+        chatbox.SetActive(false);
     }
 
     private IEnumerator PrintRoutine(string message, bool immediate)

@@ -41,7 +41,7 @@ public class SwitchCommand
 
 public class BattleLogic
 {
-    private Battle battleUI;
+    private IBattle battleUI;
     private List<EffectCommand> effectQueue; // some elements may be null
 
     public int BattleSize { get; set; }
@@ -54,7 +54,7 @@ public class BattleLogic
     public Weather Weather { get; set; }
     public Outcome Outcome { get; set; }
 
-    public BattleLogic(Battle battle, BattleInfo info)
+    public BattleLogic(IBattle battle, BattleInfo info)
     {
         battleUI = battle;
         BattleSize = info.BattleSize;
@@ -349,9 +349,9 @@ public class BattleLogic
 
         var multiplier = Types.Affinity(move, target);
         if (multiplier == 0f) return;
-        else if (multiplier < 1f) battleUI.notVeryEffectiveSound.Play();
-        else if (multiplier >= 2f) battleUI.superEffectiveSound.Play();
-        else battleUI.hitSound.Play();
+        else if (multiplier < 1f) battleUI.PlayNotVeryEffectiveHitSound();
+        else if (multiplier >= 2f) battleUI.PlaySuperEffectiveHitSound();
+        else battleUI.PlayHitSound();
     }
 
     private IEnumerator PrintEffectiveness(Move move, Pokemon target)
@@ -544,7 +544,7 @@ public class BattleLogic
                 yield return battleUI.NotifyUpdateExp(true);
                 yield return battleUI.NotifyUpdateHealth(true);
             }
-            battleUI.levelUpSound.Play();
+            battleUI.PlayLevelUpSound();
             yield return Print($"{receiver.Name} reached level {receiver.Level}!");   
         }
 

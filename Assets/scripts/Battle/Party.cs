@@ -37,10 +37,10 @@ public class Party : MonoBehaviour
     public Dialog chatbox;
     public AudioSource chatSound;
     public SpriteRenderer transition;
-    public Battle battle;
     public HUD hud;
 
-    private Slot[] slots = new Slot[6];
+    private IBattle Battle;
+    private readonly Slot[] slots = new Slot[6];
     private Sprite[] slotBackgrounds; // selected, not selected, none, selected dead, not selected dead
     private Sprite[] statuses; // psn, bpsn, slp, par, frz, brn, fnt
     private int selectionIndex;
@@ -66,8 +66,9 @@ public class Party : MonoBehaviour
         SwitchPicker();
     }
 
-    public void Init(bool forcedSwitch)
+    public void Init(IBattle battle, bool forcedSwitch)
     {
+        Battle = battle;
         chatbox.SetState(ChatState.Party);
         StartCoroutine(chatbox.Print("Select your Pokemon.", true));
 
@@ -75,26 +76,26 @@ public class Party : MonoBehaviour
         selectionIndex = 0;
 
         // add the pokemons in the field
-        for (var i = 0; i < battle.Logic.ActiveAllies.Count; i++)
+        for (var i = 0; i < Battle.Logic.ActiveAllies.Count; i++)
         {
-            var pkmn = battle.Logic.ActiveAllies[i];
+            var pkmn = Battle.Logic.ActiveAllies[i];
             var slot = slots[i];
             FillSlot(pkmn, slot, i == 0);
         }
 
         // add the pokemons not in the field
-        for (var i = 0; i < battle.Logic.PartyAllies.Count; i++)
+        for (var i = 0; i < Battle.Logic.PartyAllies.Count; i++)
         {
-            var pkmn = battle.Logic.PartyAllies[i];
-            var slot = slots[i + battle.Logic.ActiveAllies.Count];
+            var pkmn = Battle.Logic.PartyAllies[i];
+            var slot = slots[i + Battle.Logic.ActiveAllies.Count];
             FillSlot(pkmn, slot, false);
         }
 
         // fill the remaining slots with nothing
-        for (var i = battle.Logic.ActiveAllies.Count + battle.Logic.PartyAllies.Count; i < 6; i++)
+        for (var i = Battle.Logic.ActiveAllies.Count + Battle.Logic.PartyAllies.Count; i < 6; i++)
             EmptySlot(slots[i]);
 
-        amountInParty = battle.Logic.ActiveAllies.Count + battle.Logic.PartyAllies.Count;
+        amountInParty = Battle.Logic.ActiveAllies.Count + Battle.Logic.PartyAllies.Count;
         playerIsSwitching = true;
         isForcedSwitch = forcedSwitch;
     }
@@ -106,7 +107,7 @@ public class Party : MonoBehaviour
         partyCanvas.SetActive(false);
         battleCanvas.SetActive(true);
         yield return hud.FadeIn();
-        battle.NotifySwitchPerformed(selection);
+        Battle.NotifySwitchPerformed(selection);
     }
 
     private void SwitchPicker()
@@ -154,7 +155,7 @@ public class Party : MonoBehaviour
                 return;
             }
 
-            if (battle.Logic.ActiveAllies.Contains(slots[selectionIndex].Pokemon))
+            if (Battle.Logic.ActiveAllies.Contains(slots[selectionIndex].Pokemon))
             {
                 StartCoroutine(chatbox.Print($"{slots[selectionIndex].Pokemon.Name} is already in the fight!"));
                 return;

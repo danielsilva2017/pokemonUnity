@@ -16,15 +16,15 @@ public abstract class EffectFunctions
     /// <summary>
     /// (Optional) When effect is first applied.
     /// </summary>
-    public virtual IEnumerator OnCreation(Effect effect, Pokemon user, Pokemon target, Battle battle) { yield return null; }
+    public virtual IEnumerator OnCreation(Effect effect, Pokemon user, Pokemon target, IBattle battle) { yield return null; }
     /// <summary>
     /// (Optional) Performed every turn.
     /// </summary>
-    public virtual IEnumerator Execute(Effect effect, Pokemon user, Pokemon target, Battle battle) { yield return null; }
+    public virtual IEnumerator Execute(Effect effect, Pokemon user, Pokemon target, IBattle battle) { yield return null; }
     /// <summary>
     /// (Optional) When effect is removed or is or is on its final turn.
     /// </summary>
-    public virtual IEnumerator OnDeletion(Effect effect, Pokemon user, Pokemon target, Battle battle) { yield return null; }
+    public virtual IEnumerator OnDeletion(Effect effect, Pokemon user, Pokemon target, IBattle battle) { yield return null; }
     /// <summary>
     /// (Optional) When effect is  triggered in the overworld.
     /// </summary>
@@ -54,19 +54,19 @@ public class Freeze : EffectFunctions
         EndOnSwitch = false;
     }
 
-    public override IEnumerator OnCreation(Effect effect, Pokemon user, Pokemon target, Battle battle)
+    public override IEnumerator OnCreation(Effect effect, Pokemon user, Pokemon target, IBattle battle)
     {
         target.Status = Status.Frozen;
         target.CanAttack = false;
         yield return battle.Print($"{target.Name} became frozen!");
     }
 
-    public override IEnumerator Execute(Effect effect, Pokemon user, Pokemon target, Battle battle)
+    public override IEnumerator Execute(Effect effect, Pokemon user, Pokemon target, IBattle battle)
     {
         yield return battle.Print($"{target.Name} is frozen solid!");
     }
 
-    public override IEnumerator OnDeletion(Effect effect, Pokemon user, Pokemon target, Battle battle)
+    public override IEnumerator OnDeletion(Effect effect, Pokemon user, Pokemon target, IBattle battle)
     {
         target.Status = Status.None;
         target.CanAttack = true;
@@ -83,13 +83,13 @@ public class Burn : EffectFunctions
         EndOnSwitch = false;
     }
 
-    public override IEnumerator OnCreation(Effect effect, Pokemon user, Pokemon target, Battle battle)
+    public override IEnumerator OnCreation(Effect effect, Pokemon user, Pokemon target, IBattle battle)
     {
         target.Status = Status.Burned;
         yield return battle.Print($"{target.Name} is now burning!");
     }
 
-    public override IEnumerator Execute(Effect effect, Pokemon user, Pokemon target, Battle battle)
+    public override IEnumerator Execute(Effect effect, Pokemon user, Pokemon target, IBattle battle)
     {
         yield return battle.Print($"{target.Name} is suffering from a burn.");
         var damage = Mathf.FloorToInt(target.MaxHealth / 16f);

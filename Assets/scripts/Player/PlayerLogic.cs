@@ -11,7 +11,6 @@ public enum Direction
 
 public class PlayerLogic : MonoBehaviour
 {
-    public Camera mainCamera;
     public float moveSpeed;
     public LayerMask solidLayer;  // solid objects
     public LayerMask grassLayer;  // grass
@@ -19,24 +18,16 @@ public class PlayerLogic : MonoBehaviour
     public LayerMask jumpLayer;   // can jump over
     public LayerMask noJumpLayer; // walkable, cannot jump over something from here
     public Overworld overworld;
-    public Image routeHeader;
-    public Text routeName;
-    public RectTransform routeShowPosition;
-    public RectTransform routeHidePosition;
-    public SpriteRenderer introEffect;
-    public AudioSource battleIntroSound;
-    public Image sideMenu;
-    public Text menuPokemon;
-    public Text menuBag;
-    public Text menuSave;
+    public PlayerUI playerUI; // transitions and animations other than moving
 
     private bool isMoving;
     private bool isRunning;
     private bool isJumping;
     private bool isSurfing;
     private bool isUsingMenu;
-    private bool isBusy;
+    private bool isBusy; // general boolean for dropping inputs
     private bool isInteractionFinished; // used by interactable to signal dialogue is over
+    private int interactionForbiddenFrames; // do not allow interaction for this amount of frames
     private GameObject interactable;
     private Vector2 input;
     private Animator animator;
@@ -76,14 +67,11 @@ public class PlayerLogic : MonoBehaviour
     {
         if (!isInteractionFinished) return; // drop inputs
 
+        if (interactionForbiddenFrames > 0) // stop user from beginning interaction on the same keypress that ended one
+            interactionForbiddenFrames--;
+
         if (Input.GetKeyUp(KeyCode.Return)) // open/close side menu
-        {
-            sideMenu.enabled = !sideMenu.enabled;
-            menuPokemon.enabled = !menuPokemon.enabled;
-            menuBag.enabled = !menuBag.enabled;
-            menuSave.enabled = !menuSave.enabled;
-            isUsingMenu = !isUsingMenu;
-        }
+            isUsingMenu = playerUI.menu.Toggle();
 
         if (!isMoving && !isJumping && !isUsingMenu && !isBusy) // process movement if not busy
         {
@@ -235,35 +223,13 @@ public class PlayerLogic : MonoBehaviour
     {
         isBusy = true; // stop inputs
         overworld.locationMusic.Stop();
-        battleIntroSound.Play();
-        MakeInvisible(introEffect);
-        introEffect.transform.position = transform.position;
-
-        for (var i = mainCamera.orthographicSize; i <= 5f; i += 0.01f)
-        {
-            mainCamera.orthographicSize = i;
-            yield return null;
-        }
-
-        for (var i = mainCamera.orthographicSize; i >= 0.5f;)
-        {
-            if (i >= 2.5f) i -= 0.125f;
-            else if (i >= 1.75f) i -= 0.095f;
-            else if (i >= 1.25f) i -= 0.07f;
-            else if (i >= 0.75f) i -= 0.05f;
-            else i -= 0.03f;
-
-            mainCamera.orthographicSize = i;
-            introEffect.color = new Color(introEffect.color.r, introEffect.color.g, introEffect.color.b, introEffect.color.a + 0.025f);
-            battleIntroSound.volume -= 0.004f;
-            yield return null;
-        }
-        
+        yield return playerUI.WildBattleTransition();
         SceneInfo.BeginWildBattle(this, overworld.GenerateGrassEncounter(), overworld.weather);
     }
 
     private void Interact()
     {
+        if (interactionForbiddenFrames > 0) return;
         isInteractionFinished = false;
 
         switch (interactable.tag)
@@ -274,13 +240,18 @@ public class PlayerLogic : MonoBehaviour
             case "Item":
                 interactable.GetComponent<Item>().Collect(this);
                 break;
+            default:
+                isInteractionFinished = true;
+                break;
         } 
     }
 
     public void EndInteraction()
     {
         isInteractionFinished = true;
+
         // required due to the order in which update() functions are run
+        interactionForbiddenFrames = 2;
         if (interactable.tag == "Item") interactable = null;
     }
 
@@ -289,8 +260,11 @@ public class PlayerLogic : MonoBehaviour
         if (other.tag == "Area Border")
         {
             var border = other.gameObject.GetComponent<AreaBorder>();
-            if (border.overworld.locationName != overworld.locationName) // changed area
-                border.ChangeArea(this);
+            if (border.overworld.locationName != overworld.locationName) // change area
+            {
+                playerUI.PassAreaBorder(border, overworld);
+                overworld = border.overworld;
+            }
         }
     }
 

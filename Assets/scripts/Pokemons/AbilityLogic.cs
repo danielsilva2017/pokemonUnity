@@ -11,23 +11,23 @@ public abstract class AbilityFunctions
     /// <summary>
     /// (Optional) On user switching in (or battle starting with user as first Pokemon).
     /// </summary>
-    public virtual IEnumerator OnSwitchIn(Ability ability, Pokemon user, Battle battle) { yield break; }
+    public virtual IEnumerator OnSwitchIn(Ability ability, Pokemon user, IBattle battle) { yield break; }
     /// <summary>
     /// (Optional) On turn beginning.
     /// </summary>
-    public virtual IEnumerator OnTurnBeginning(Ability ability, Pokemon user, Battle battle) { yield break; }
+    public virtual IEnumerator OnTurnBeginning(Ability ability, Pokemon user, IBattle battle) { yield break; }
     /// <summary>
     /// (Optional) On turn ending.
     /// </summary>
-    public virtual IEnumerator OnTurnEnding(Ability ability, Pokemon user, Battle battle) { yield break; }
+    public virtual IEnumerator OnTurnEnding(Ability ability, Pokemon user, IBattle battle) { yield break; }
     /// <summary>
     /// (Optional) On user switching out.
     /// </summary>
-    public virtual IEnumerator OnSwitchOut(Ability ability, Pokemon user, Battle battle) { yield break; }
+    public virtual IEnumerator OnSwitchOut(Ability ability, Pokemon user, IBattle battle) { yield break; }
     /// <summary>
     /// (Optional) On user dying.
     /// </summary>
-    public virtual IEnumerator OnDeath(Ability ability, Pokemon user, Battle battle) { yield break; }
+    public virtual IEnumerator OnDeath(Ability ability, Pokemon user, IBattle battle) { yield break; }
     /// <summary>
     /// (Optional) When ability is used in the overworld.
     /// </summary>
@@ -44,7 +44,7 @@ public enum AbilityLogic
 
 public class Intimidate : AbilityFunctions
 {
-    public override IEnumerator OnSwitchIn(Ability ability, Pokemon user, Battle battle)
+    public override IEnumerator OnSwitchIn(Ability ability, Pokemon user, IBattle battle)
     {
         var targets = user.IsAlly ? battle.Logic.ActiveEnemies : battle.Logic.ActiveAllies;
         foreach (var target in targets)
@@ -57,7 +57,7 @@ public class Intimidate : AbilityFunctions
 
 public class SpeedBoost : AbilityFunctions
 {
-    public override IEnumerator OnTurnEnding(Ability ability, Pokemon user, Battle battle)
+    public override IEnumerator OnTurnEnding(Ability ability, Pokemon user, IBattle battle)
     {
         user.SpeedStage++;
         yield return battle.Print($"{user.Name}'s speed rose!");

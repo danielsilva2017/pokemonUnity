@@ -26,7 +26,6 @@ public class Trainer : NPC
 
     private List<Pokemon> party;
 
-    // Start is called before the first frame update
     void Start()
     {
         Name = trainerName;

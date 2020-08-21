@@ -12,19 +12,19 @@ public abstract class MoveFunctions
     /// <summary>
     /// Use a move.
     /// </summary>
-    public abstract IEnumerator Execute(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount);
+    public abstract IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount);
     /// <summary>
     /// (Optional) On move being used.
     /// </summary>
-    public virtual IEnumerator OnUse(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount) { yield break; }
+    public virtual IEnumerator OnUse(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount) { yield break; }
     /// <summary>
     /// (Optional) On move hitting.
     /// </summary>
-    public virtual IEnumerator OnHit(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount) { yield break; }
+    public virtual IEnumerator OnHit(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount) { yield break; }
     /// <summary>
     /// (Optional) On move missing.
     /// </summary>
-    public virtual IEnumerator OnMiss(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount) { yield break; }
+    public virtual IEnumerator OnMiss(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount) { yield break; }
     /// <summary>
     /// (Optional) When move is used in the overworld.
     /// </summary>
@@ -63,14 +63,14 @@ public class Struggle : MoveFunctions
 {
     private int damage;
 
-    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount)
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
     {
         damage = CalcDamage(move, user, target, battle, targetCount);
         target.Health -= damage;
         yield break;
     }
 
-    public override IEnumerator OnHit(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount)
+    public override IEnumerator OnHit(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
     {
         yield return battle.Print($"{user.Name} received some recoil damage.");
         var recoil = Mathf.FloorToInt(damage * 0.25f);
@@ -80,7 +80,7 @@ public class Struggle : MoveFunctions
 
 public class Scratch : MoveFunctions
 {
-    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount)
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
     {
         target.Health -= CalcDamage(move, user, target, battle, targetCount);
         yield break;
@@ -89,7 +89,7 @@ public class Scratch : MoveFunctions
 
 public class Tackle : MoveFunctions
 {
-    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount)
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
     {
         target.Health -= CalcDamage(move, user, target, battle, targetCount);
         yield break;
@@ -98,7 +98,7 @@ public class Tackle : MoveFunctions
 
 public class VineWhip : MoveFunctions
 {
-    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount)
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
     {
         target.Health -= CalcDamage(move, user, target, battle, targetCount);
         yield break;
@@ -107,7 +107,7 @@ public class VineWhip : MoveFunctions
 
 public class BlazeKick : MoveFunctions
 {
-    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount)
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
     {
         user.CritStage += 2;
         target.Health -= CalcDamage(move, user, target, battle, targetCount);
@@ -120,7 +120,7 @@ public class BlazeKick : MoveFunctions
 
 public class Blizzard : MoveFunctions
 {
-    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount)
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
     {
         target.Health -= CalcDamage(move, user, target, battle, targetCount);
 
@@ -131,7 +131,7 @@ public class Blizzard : MoveFunctions
 
 public class Ember : MoveFunctions
 {
-    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, Battle battle, int targetCount)
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
     {
         target.Health -= CalcDamage(move, user, target, battle, targetCount);
 

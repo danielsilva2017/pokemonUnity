@@ -3,20 +3,17 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class menuPoke: MonoBehaviour
+public class MenuPoke: MonoBehaviour
 {
-    public Image chatbox;
+    public GameObject chatbox;
     public Text pokemon;
     public Text bag;
     public Text save;
-    public Text[] texts= new Text[3];
-    public int selectionIndex=0;
     public AudioSource buttonPress;
 
-    private readonly int framesPerChar = 2;
-
-    public bool IsBusy { get; set; }
-
+    private Text[] texts= new Text[3];
+    private int selectionIndex=0;
+        
     // Start is called before the first frame update
     void Start()
     {   
@@ -33,6 +30,14 @@ public class menuPoke: MonoBehaviour
     void Update()
     {
         SwitchPicker();
+    }
+
+    public bool Toggle()
+    {
+        if (chatbox.activeInHierarchy) Hide();
+        else Show();
+
+        return chatbox.activeInHierarchy;
     }
 
     private void SwitchPicker()
@@ -54,21 +59,19 @@ public class menuPoke: MonoBehaviour
         text.color= new Color(1, 0, 0, 1);
     }
 
-    private void RemoveHighlight(Text text){
+    private void RemoveHighlight(Text text)
+    {
         text.color= new Color(0, 0, 0, 1);
     }
-    public void Show()
+
+    private void Show()
     {
-        chatbox.enabled = true;
-      
+        chatbox.SetActive(true);
     }
 
-    public void Hide()
+    private void Hide()
     {
-        chatbox.enabled = false;
-        pokemon.enabled = false;
-        bag.enabled = false;
-        save.enabled = false;
+        chatbox.SetActive(false);
     }
 
     
