@@ -33936,7 +33936,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cf9bd1e048bf2c43a6be1f021a27c34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  type: 1
+  skeleton: {fileID: 11400000, guid: 0b4f91c4d8c70964a90a496ba627aed1, type: 2}
   chatbox: {fileID: 660184407}
   collectedSound: {fileID: 1849376047}
 --- !u!95 &2114068150

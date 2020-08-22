@@ -163,7 +163,7 @@ public class BattleInfo
 public class OverworldInfo
 {
     public List<NPC> Characters { get; set; }
-    public List<Item> Items { get; set; }
+    public List<OverworldItem> Items { get; set; }
 }
 
 public class PlayerInfo

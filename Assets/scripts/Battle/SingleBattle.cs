@@ -187,6 +187,10 @@ public class SingleBattle : MonoBehaviour, IBattle
                 else yield return null;
             } 
         }
+        else
+        {
+            SceneInfo.ReturnToOverworldFromBattle();
+        }
     }
 
     private IEnumerator OnLoss()

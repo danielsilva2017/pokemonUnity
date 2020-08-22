@@ -34,7 +34,7 @@ public class Move
     // some getters for convenience
     public string Name { get { return Skeleton.moveName; } }
     public Type Type { get { return Skeleton.type; } }
-    public Category Category { get { return Skeleton.category; } }
+    public MoveCategory Category { get { return Skeleton.category; } }
     public Targeting Targeting { get { return Skeleton.targeting; } }
     public int MaxPoints { get { return Skeleton.points; } }
     public int Accuracy { get { return Skeleton.accuracy; } }

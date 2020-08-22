@@ -7,6 +7,7 @@ public class Player
 {
     public string Name { get; set; }
     public List<Pokemon> Pokemons { get; set; }
+    public Bag Bag { get; set; }
     public int Money { get; set; }
 
     public Player()
@@ -18,12 +19,14 @@ public class Player
             CreatePokemon("Snorlax", 12)
         };
         Pokemons[0].Health -= 6;
+        Bag = new Bag();
     }
 
-    public Player(Player playerInfo)
+    public Player(Player player)
     {
-        Name = playerInfo.Name;
-        Pokemons = playerInfo.Pokemons;
-        Money = playerInfo.Money;
+        Name = player.Name;
+        Pokemons = player.Pokemons;
+        Money = player.Money;
+        Bag = player.Bag;
     }
 }

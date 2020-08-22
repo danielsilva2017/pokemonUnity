@@ -345,7 +345,7 @@ public class BattleLogic
 
     private void PlayEffectivenessSound(Move move, Pokemon target)
     {
-        if (move.Category == Category.Status) return;
+        if (move.Category == MoveCategory.Status) return;
 
         var multiplier = Types.Affinity(move, target);
         if (multiplier == 0f) return;
@@ -356,7 +356,7 @@ public class BattleLogic
 
     private IEnumerator PrintEffectiveness(Move move, Pokemon target)
     {
-        if (move.Category == Category.Status) yield break;
+        if (move.Category == MoveCategory.Status) yield break;
 
         var multiplier = Types.Affinity(move, target);
         if (multiplier == 0f) yield return Print("But it had no effect!");

@@ -23,7 +23,7 @@ public class Overworld : MonoBehaviour
     public Weather weather;
     public PlayerLogic player;
     public List<NPC> characters;
-    public List<Item> items;
+    public List<OverworldItem> items;
     public WildPokemon[] grassWildPokemon;
     public WildPokemon[] surfWildPokemon;
     public WildPokemon[] fishingWildPokemon;

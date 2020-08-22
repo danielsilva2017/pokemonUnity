@@ -12,7 +12,7 @@ public class MoveBase : ScriptableObject
     public string moveName;
     [TextArea] public string description;
     public Type type;
-    public Category category;
+    public MoveCategory category;
     public Targeting targeting;
     public int points; // 0 = infinite
     public int accuracy; // 1-100. 0 = never misses
@@ -20,7 +20,7 @@ public class MoveBase : ScriptableObject
     public MoveLogic logic;
 }
 
-public enum Category
+public enum MoveCategory
 {
     Physical, Special, Status
 }

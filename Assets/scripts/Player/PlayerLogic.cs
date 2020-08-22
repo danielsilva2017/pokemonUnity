@@ -238,7 +238,7 @@ public class PlayerLogic : MonoBehaviour
                 interactable.GetComponent<NPC>().Interact(this);
                 break;
             case "Item":
-                interactable.GetComponent<Item>().Collect(this);
+                interactable.GetComponent<OverworldItem>().Collect(this);
                 break;
             default:
                 isInteractionFinished = true;

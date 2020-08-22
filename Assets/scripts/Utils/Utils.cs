@@ -193,10 +193,10 @@ public class Utils
     public static int CalcDamage(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
     {
         var crit = IsCrit(user.CritStage);
-        var attack = move.Category == Category.Physical
+        var attack = move.Category == MoveCategory.Physical
             ? GetEffectiveStat(user.Attack, crit ? Math.Max(0, user.AttackStage) : user.AttackStage)
             : GetEffectiveStat(user.SpAttack, crit ? Math.Max(0, user.SpAttackStage) : user.SpAttackStage);
-        var defense = move.Category == Category.Physical
+        var defense = move.Category == MoveCategory.Physical
             ? GetEffectiveStat(user.Defense, crit ? Math.Max(0, user.DefenseStage) : user.DefenseStage)
             : GetEffectiveStat(user.SpDefense, crit ? Math.Max(0, user.SpDefenseStage) : user.SpDefenseStage);
         var targets = (move.Targeting == Targeting.Adjacent && targetCount > 1) ? 0.75f : 1f;
@@ -204,7 +204,7 @@ public class Utils
         var rng = RandomFloat(0.85f, 1f);
         var stab = (move.Type == user.PrimaryType || move.Type == user.SecondaryType) ? 1.5f : 1f;
         var affinity = Types.Affinity(move, target);
-        var burn = (move.Category == Category.Physical && user.Status == Status.Burned) ? 0.5f : 1f;
+        var burn = (move.Category == MoveCategory.Physical && user.Status == Status.Burned) ? 0.5f : 1f;
 
         var total = (((((2f * user.Level / 5f) + 2f) * move.Power * attack / defense) / 50f) + 2f) *
             targets * weather * (crit ? 1.5f : 1f) * rng * stab * affinity * burn;
