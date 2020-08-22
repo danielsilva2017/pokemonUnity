@@ -110,6 +110,34 @@ public class Utils
     }
 
     /// <summary>
+    /// Fades a sprite in (true) or out (false).
+    /// </summary>
+    private static IEnumerator Fade(SpriteRenderer sprite, int frames, bool fadeIn)
+    {
+        for (float i = 0; i <= frames; i++)
+        {
+            sprite.color = new Color(sprite.color.r, sprite.color.g, sprite.color.b, fadeIn ? (i / frames) : ((frames - i) / frames));
+            yield return null;
+        }
+    }
+
+    /// <summary>
+    /// Fades a sprite in.
+    /// </summary>
+    public static IEnumerator FadeIn(SpriteRenderer sprite, int frames)
+    {
+        yield return Fade(sprite, frames, true);
+    }
+
+    /// <summary>
+    /// Fades a sprite out.
+    /// </summary>
+    public static IEnumerator FadeOut(SpriteRenderer sprite, int frames)
+    {
+        yield return Fade(sprite, frames, false);
+    }
+
+    /// <summary>
     /// Creates a Pokemon given a species name.
     /// </summary>
     public static Pokemon CreatePokemon(string speciesName, int level)

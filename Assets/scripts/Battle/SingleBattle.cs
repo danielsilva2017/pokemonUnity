@@ -16,7 +16,7 @@ public class SingleBattle : MonoBehaviour, IBattle
     public Unit enemyUnit;
     public HUD hud;
     public Dialog chatbox;
-    public Party party;
+    public BattleParty party;
     public AudioSource chatSound;
     public AudioSource hitSound;
     public AudioSource notVeryEffectiveSound;

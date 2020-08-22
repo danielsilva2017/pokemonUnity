@@ -2,17 +2,23 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
+using static Utils;
 
-public class MenuPoke: MonoBehaviour
+public class MenuPoke: MonoBehaviour, ITransitionable
 {
-    public GameObject chatbox;
+    public GameObject menu;
+    public PlayerLogic playerLogic;
+    public OverworldParty party;
+    public SpriteRenderer transition;
+    public AudioSource buttonPress;
     public Text pokemon;
     public Text bag;
     public Text save;
-    public AudioSource buttonPress;
 
-    private Text[] texts= new Text[3];
-    private int selectionIndex=0;
+    private Text[] texts = new Text[3];
+    private int selectionIndex;
+
+    public bool IsBusy { get; set; }
         
     // Start is called before the first frame update
     void Start()
@@ -22,57 +28,87 @@ public class MenuPoke: MonoBehaviour
         texts[2]=save;
         //Debug.Log(texts[0].text);
         AddHighlight(pokemon);
-        Hide();
         
+        Hide();
     }
 
     // Update is called once per frame
     void Update()
     {
-        SwitchPicker();
+        if (!IsBusy)
+            OptionPicker();
     }
 
     public bool Toggle()
     {
-        if (chatbox.activeInHierarchy) Hide();
+        if (menu.activeInHierarchy) Hide();
         else Show();
 
-        return chatbox.activeInHierarchy;
+        return menu.activeInHierarchy;
     }
 
-    private void SwitchPicker()
+    public void SetSelectionIndex(int index)
+    {
+        selectionIndex = index;
+        for (var i = 0; i < texts.Length; i++)
+        {
+            if (i == index) AddHighlight(texts[i]);
+            else RemoveHighlight(texts[i]);
+        }
+    }
+
+    private void OptionPicker()
     {
         var oldIndex = selectionIndex;
 
-        if (Input.GetKeyDown(KeyCode.UpArrow)) selectionIndex = selectionIndex == 0 ? 0 : selectionIndex-1;
-        if (Input.GetKeyDown(KeyCode.DownArrow)) selectionIndex =  selectionIndex == 2 ? 2 : selectionIndex+1;
+        if (Input.GetKeyDown(KeyCode.UpArrow)) selectionIndex = selectionIndex == 0 ? 0 : selectionIndex - 1;
+        if (Input.GetKeyDown(KeyCode.DownArrow)) selectionIndex = selectionIndex == 2 ? 2 : selectionIndex + 1;
 
         if (oldIndex != selectionIndex)
         {
             AddHighlight(texts[selectionIndex]);
             RemoveHighlight(texts[oldIndex]);
         }
+
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            IsBusy = true;
+
+            switch (selectionIndex)
+            {
+                case 0:
+                    playerLogic.playerUI.MenuTransition(menu, party, party.gameObject);
+                    break;
+                case 1:
+                    break;
+                case 2:
+                    break;
+            }
+        }
     }
 
-   private void AddHighlight(Text text)
+    private void AddHighlight(Text text)
     {
-        text.color= new Color(1, 0, 0, 1);
+        text.color = new Color(1, 0, 0, 1);
     }
 
     private void RemoveHighlight(Text text)
     {
-        text.color= new Color(0, 0, 0, 1);
+        text.color = new Color(0, 0, 0, 1);
     }
 
-    private void Show()
+    public void Show()
     {
-        chatbox.SetActive(true);
+        menu.SetActive(true);
     }
 
-    private void Hide()
+    public void Hide()
     {
-        chatbox.SetActive(false);
+        menu.SetActive(false);
     }
 
-    
+    public void Init()
+    {
+        IsBusy = false;
+    }
 }

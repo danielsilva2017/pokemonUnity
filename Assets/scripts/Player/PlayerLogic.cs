@@ -70,7 +70,7 @@ public class PlayerLogic : MonoBehaviour
         if (interactionForbiddenFrames > 0) // stop user from beginning interaction on the same keypress that ended one
             interactionForbiddenFrames--;
 
-        if (Input.GetKeyUp(KeyCode.Return)) // open/close side menu
+        if (Input.GetKeyUp(KeyCode.Return) && !playerUI.menu.IsBusy) // open/close side menu
             isUsingMenu = playerUI.menu.Toggle();
 
         if (!isMoving && !isJumping && !isUsingMenu && !isBusy) // process movement if not busy

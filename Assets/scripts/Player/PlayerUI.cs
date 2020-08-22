@@ -4,12 +4,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using static Utils;
 
+public interface ITransitionable
+{
+    void Init();
+}
+
 public class PlayerUI : MonoBehaviour
 {
     public Camera mainCamera;
     public MenuPoke menu;
     public GameObject routeHeaders;
     public SpriteRenderer introEffect;
+    public SpriteRenderer transition;
     public AudioSource battleIntroSound;
 
     public Image RouteHeader { get; set; }
@@ -24,6 +30,8 @@ public class PlayerUI : MonoBehaviour
         RouteName = routeHeaders.transform.GetChild(0).GetChild(0).GetComponent<Text>();
         RouteShowPosition = routeHeaders.transform.GetChild(1).GetComponent<RectTransform>();
         RouteHidePosition = routeHeaders.transform.GetChild(2).GetComponent<RectTransform>();
+        introEffect.gameObject.SetActive(false);
+        transition.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -34,6 +42,7 @@ public class PlayerUI : MonoBehaviour
 
     public IEnumerator WildBattleTransition()
     {
+        introEffect.gameObject.SetActive(true);
         battleIntroSound.Play();
         MakeInvisible(introEffect);
         introEffect.transform.position = transform.position;
@@ -57,6 +66,28 @@ public class PlayerUI : MonoBehaviour
             battleIntroSound.volume -= 0.004f;
             yield return null;
         }
+    }
+
+    /// <summary>
+    /// Switches active menus while also showing a fade in and out animation.
+    /// </summary>
+    public void MenuTransition(GameObject oldScreen, ITransitionable newScreenScript, GameObject newScreen)
+    {
+        StartCoroutine(PerformScreenTransition(oldScreen, newScreenScript, newScreen));
+    }
+
+    private IEnumerator PerformScreenTransition(GameObject oldScreen, ITransitionable newScreenScript, GameObject newScreen)
+    {
+        transition.gameObject.SetActive(true);
+        transition.transform.position = transform.position;
+        yield return FadeIn(transition, 10);
+
+        oldScreen.SetActive(false);
+        newScreen.SetActive(true);
+        newScreenScript.Init();
+        yield return FadeOut(transition, 10);
+
+        transition.gameObject.SetActive(false);
     }
 
     public void PassAreaBorder(AreaBorder border, Overworld oldOverworld)
