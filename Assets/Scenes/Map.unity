@@ -222,7 +222,7 @@ MonoBehaviour:
   pokemon: {fileID: 746964220}
   bag: {fileID: 1649921406}
   save: {fileID: 1280488069}
-  buttonPress: {fileID: 0}
+  buttonPress: {fileID: 646872616}
 --- !u!114 &62778846
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1294,7 +1294,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mainCamera: {fileID: 2041818579}
-  menu: {fileID: 0}
+  menu: {fileID: 62778845}
   routeHeaders: {fileID: 707538367}
   introEffect: {fileID: 2135121273}
   battleIntroSound: {fileID: 1535934861}
@@ -14509,9 +14509,9 @@ MonoBehaviour:
   weather: 4
   player: {fileID: 161115116}
   characters:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 667214289}
+  - {fileID: 254248987}
+  - {fileID: 1448495894}
   items: []
   grassWildPokemon:
   - speciesName: Bulbasaur
