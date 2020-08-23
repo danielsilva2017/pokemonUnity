@@ -294,4 +294,34 @@ public class Utils
         return Mathf.FloorToInt((trainer * baseExp * fainted.Level * Mathf.Pow(2 * fainted.Level + 10f, 2.5f)) /
             (5f * candidates * Mathf.Pow(fainted.Level + candidate.Level + 10, 2.5f)) + 1);
     }
+
+    /// <summary>
+    /// Calculates the chance (0-100) of passing a catch check for a Pokemon (4 checks are required).
+    /// </summary>
+    public static float GetCatchChance(Pokemon target, float ballMultiplier)
+    {
+        float statusBonus;
+
+        switch (target.Status)
+        {
+            case Status.Sleeping:
+            case Status.Frozen:
+                statusBonus = 2f;
+                break;
+            case Status.Paralyzed:
+            case Status.Poisoned:
+            case Status.Toxic:
+            case Status.Burned:
+                statusBonus = 1.5f;
+                break;
+            default:
+                statusBonus = 1f;
+                break;
+        }
+
+        var modifiedCatchRate = ((3f * target.MaxHealth - 2f * target.Health) * target.Skeleton.catchRate * ballMultiplier) /
+            (3f * target.MaxHealth) * statusBonus;
+
+        return 100f * 65536f / (Mathf.Pow(255f / Limit(1f, modifiedCatchRate, 255f), 0.1875f) * 65536f);
+    }
 }

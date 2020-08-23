@@ -15,7 +15,6 @@ MonoBehaviour:
   itemName: Super Potion
   description: Restores the HP of a Pokemon by 50 points.
   sprite: {fileID: 21300000, guid: 3ce8d29fd9dc37a44aa37002e69bc7d9, type: 3}
-  category: 2
+  bagCategory: 2
+  usage: 0
   logic: 1
-  affectsPlayer: 0
-  affectsEnemy: 0

@@ -15,7 +15,6 @@ MonoBehaviour:
   itemName: Pokeball
   description: A device for catching wild Pokemon.
   sprite: {fileID: 21300000, guid: d900fe2c77edf9149b4f9c7b915c690e, type: 3}
-  category: 1
+  bagCategory: 1
+  usage: 1
   logic: 0
-  affectsPlayer: 0
-  affectsEnemy: 1

@@ -12,13 +12,17 @@ public class ItemBase : ScriptableObject
     public string itemName;
     [TextArea] public string description;
     public Sprite sprite;
-    public ItemCategory category;
+    public ItemCategory bagCategory;
+    public ItemUsage usage;
     public ItemLogic logic;
-    public bool affectsPlayer; // item either affects player or a Pokemon
-    public bool affectsEnemy; // if it affects a Pokemon, it either affects an ally or a target
 }
 
 public enum ItemCategory
 {
     KeyItem, PokeballItem, MiscItem
+}
+
+public enum ItemUsage
+{
+    TargetsSelf, TargetsEnemy, TargetsPlayer
 }

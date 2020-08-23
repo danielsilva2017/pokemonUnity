@@ -43,6 +43,8 @@ public interface IBattle
     void RegisterSwitch(Pokemon switchedIn);
 
     BattleLogic Logic { get; }
+    BattleInfo BattleInfo { get; }
+    PlayerInfo PlayerInfo { get; }
     void PlayHitSound();
     void PlayNotVeryEffectiveHitSound();
     void PlaySuperEffectiveHitSound();

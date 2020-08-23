@@ -32,9 +32,12 @@ public class SingleBattle : MonoBehaviour, IBattle
     private List<Pokemon> order;
     private List<SwitchCommand> switchQueue; // some elements may be null
     private List<MoveCommand> moveQueue; // some elements may be null
+    private List<ItemCommand> itemQueue; // some elements may be null
 
     public BattleState BattleState { get; set; }
     public BattleLogic Logic { get; private set; }
+    public BattleInfo BattleInfo { get; private set; }
+    public PlayerInfo PlayerInfo { get; private set; }
 
     public IEnumerator Print(string message, bool delay = true)
     {
@@ -46,13 +49,15 @@ public class SingleBattle : MonoBehaviour, IBattle
     void Start()
     {
         // Get init data
-        var battleInfo = SceneInfo.GetBattleInfo();
+        BattleInfo = SceneInfo.GetBattleInfo();
+        PlayerInfo = SceneInfo.GetPlayerInfo();
 
         // Logic setup
-        EnsureAllLeadingPokemonAlive(battleInfo);
-        Logic = new BattleLogic(this, battleInfo);
+        EnsureAllLeadingPokemonAlive(BattleInfo);
+        Logic = new BattleLogic(this, BattleInfo);
         moveQueue = new List<MoveCommand>();
         switchQueue = new List<SwitchCommand>();
+        itemQueue = new List<ItemCommand>();
         order = Logic.SortBySpeed();
 
         // UI setup
@@ -144,6 +149,7 @@ public class SingleBattle : MonoBehaviour, IBattle
                 forcedSwitchIndex = 0;
                 moveQueue = new List<MoveCommand>();
                 switchQueue = new List<SwitchCommand>();
+                itemQueue = new List<ItemCommand>();
                 PerformForcedSwitches();
                 break;
             case Outcome.Win:
@@ -155,21 +161,21 @@ public class SingleBattle : MonoBehaviour, IBattle
             case Outcome.Escaped:
                 StartCoroutine(OnEscape());
                 break;
+            case Outcome.Caught:
+                StartCoroutine(OnCaught());
+                break;
         }
     }
 
     private IEnumerator OnWin()
     {
-        var battleInfo = SceneInfo.GetBattleInfo();
-
-        if (battleInfo.IsTrainerBattle)
+        if (BattleInfo.IsTrainerBattle)
         {
-            var dialogue = battleInfo.Trainer.defeatDialogue;
-            var playerInfo = SceneInfo.GetPlayerInfo();
+            var dialogue = BattleInfo.Trainer.defeatDialogue;
             var index = 1;
 
-            battleInfo.Trainer.IsDefeated = true;
-            playerInfo.Player.Money += battleInfo.Trainer.money;
+            BattleInfo.Trainer.IsDefeated = true;
+            PlayerInfo.Player.Money += BattleInfo.Trainer.money;
 
             yield return Print(dialogue[0], false);
 
@@ -180,7 +186,7 @@ public class SingleBattle : MonoBehaviour, IBattle
                 {
                     chatSound.Play();
                     if (index < dialogue.Length) yield return Print(dialogue[index], false);
-                    else if (index == dialogue.Length) yield return Print($"{playerInfo.Player.Name} got {battleInfo.Trainer.money}€ for winning!", false);
+                    else if (index == dialogue.Length) yield return Print($"{PlayerInfo.Player.Name} got {BattleInfo.Trainer.money}€ for winning!", false);
                     else SceneInfo.ReturnToOverworldFromBattle();
                     index++;
                 }
@@ -195,14 +201,13 @@ public class SingleBattle : MonoBehaviour, IBattle
 
     private IEnumerator OnLoss()
     {
-        var playerInfo = SceneInfo.GetPlayerInfo();
-        var isTrainerBattle = SceneInfo.GetBattleInfo().IsTrainerBattle;
-        var moneyLoss = playerInfo.Player.Money / 2;
+        var isTrainerBattle = BattleInfo.IsTrainerBattle;
+        var moneyLoss = PlayerInfo.Player.Money / 2;
         var index = 0;
 
-        playerInfo.Player.Money -= moneyLoss;
+        PlayerInfo.Player.Money -= moneyLoss;
 
-        yield return Print($"{playerInfo.Player.Name} has no Pokemons left!", false);
+        yield return Print($"{PlayerInfo.Player.Name} has no Pokemons left!", false);
 
         // say defeat dialogue
         while (index <= 3)
@@ -213,14 +218,14 @@ public class SingleBattle : MonoBehaviour, IBattle
                 switch (index++)
                 {
                     case 0:
-                        if (isTrainerBattle) yield return Print($"{playerInfo.Player.Name} had to pay {moneyLoss}€...", false);
-                        else yield return Print($"{playerInfo.Player.Name} lost {moneyLoss}€ on the way out...", false);
+                        if (isTrainerBattle) yield return Print($"{PlayerInfo.Player.Name} had to pay {moneyLoss}€...", false);
+                        else yield return Print($"{PlayerInfo.Player.Name} lost {moneyLoss}€ on the way out...", false);
                         break;
                     case 1:
                         yield return Print("...", false);
                         break;
                     case 2:
-                        yield return Print($"{playerInfo.Player.Name} blacked out!", false);
+                        yield return Print($"{PlayerInfo.Player.Name} blacked out!", false);
                         break;
                     case 3:
                         SceneInfo.ReturnToOverworldFromBattle();
@@ -234,6 +239,21 @@ public class SingleBattle : MonoBehaviour, IBattle
     private IEnumerator OnEscape()
     {
         yield return Print("Got away safely!", false);
+
+        while (true)
+        {
+            if (Input.GetKeyDown(KeyCode.Z))
+            {
+                SceneInfo.ReturnToOverworldFromBattle();
+                break;
+            }
+            else yield return null;
+        }
+    }
+
+    private IEnumerator OnCaught()
+    {
+        yield return Print("<pokedex data here soon>", false);
 
         while (true)
         {
@@ -280,31 +300,56 @@ public class SingleBattle : MonoBehaviour, IBattle
     }
 
     /// <summary>
-    /// This Pokemon will be switched out, and it will not use a move.
+    /// This Pokemon will be switched out.
     /// </summary>
     public void AddSwitchCommand(Pokemon switchedIn)
     {
         switchQueue.Add(new SwitchCommand(switchedIn, order[orderIndex]));
         moveQueue.Add(null);
+        itemQueue.Add(null);
         MoveToNextInOrder();
     }
 
     /// <summary>
-    /// This Pokemon will use a move, and it will not be switched out.
+    /// This Pokemon will use a move.
     /// </summary>
     public void AddMoveCommand(Move move, Pokemon target)
     {
         moveQueue.Add(new MoveCommand(move, order[orderIndex], target));
         switchQueue.Add(null);
+        itemQueue.Add(null);
         MoveToNextInOrder();
     }
 
     /// <summary>
-    /// This Pokemon will use a move, and it will not be switched out.
+    /// This Pokemon will use a move.
     /// </summary>
     public void AddMoveCommand(Move move)
     {
         moveQueue.Add(new MoveCommand(move, order[orderIndex]));
+        switchQueue.Add(null);
+        itemQueue.Add(null);
+        MoveToNextInOrder();
+    }
+
+    /// <summary>
+    /// This Pokemon will use an item.
+    /// </summary>
+    public void AddItemCommand(Item item)
+    {
+        itemQueue.Add(new ItemCommand(item, order[orderIndex]));
+        moveQueue.Add(null);
+        switchQueue.Add(null);
+        MoveToNextInOrder();
+    }
+
+    /// <summary>
+    /// This Pokemon will use an item on itself.
+    /// </summary>
+    public void AddItemCommand(Item item, Pokemon target)
+    {
+        itemQueue.Add(new ItemCommand(item, target));
+        moveQueue.Add(null);
         switchQueue.Add(null);
         MoveToNextInOrder();
     }
@@ -359,7 +404,7 @@ public class SingleBattle : MonoBehaviour, IBattle
     {
         chatbox.SetState(ChatState.ChatOnly);
         BattleState = BattleState.TurnHappening;
-        StartCoroutine(Logic.Turn(moveQueue, switchQueue));
+        StartCoroutine(Logic.Turn(moveQueue, switchQueue, itemQueue));
     }
 
     private IEnumerator BeginSwitch()
@@ -433,10 +478,14 @@ public class SingleBattle : MonoBehaviour, IBattle
                     BeginPlayerMove();
                     break;
                 case 1:
+                    chatSound.Play();
+                    var sk = Resources.Load<ItemBase>("Items/Pokeball");
+                    AddItemCommand(new Item(sk), enemyUnit.Pokemon); //hardcoded throw pokeball
+                    break;
+                case 2:
                     isForcedSwitch = false;
                     StartCoroutine(BeginSwitch());
                     break;
-                case 2:
                 case 3: break;
             }
         }

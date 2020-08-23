@@ -11,7 +11,7 @@ public enum Weather
 
 public enum Outcome
 {
-    Win, Loss, Escaped, Undecided
+    Win, Loss, Escaped, Caught, Undecided
 }
 
 public class EffectCommand
@@ -39,10 +39,18 @@ public class SwitchCommand
     public SwitchCommand(Pokemon switchedIn, Pokemon switchedOut) { SwitchedIn = switchedIn; SwitchedOut = switchedOut; }
 }
 
+public class ItemCommand
+{
+    public Item Item { get; set; }
+    public Pokemon Target { get; set; }
+    public ItemCommand(Item item, Pokemon target) { Item = item; Target = target; }
+}
+
 public class BattleLogic
 {
     private IBattle battleUI;
     private List<EffectCommand> effectQueue; // some elements may be null
+    private Outcome forcedOutcome;
 
     public int BattleSize { get; set; }
     public int TurnNumber { get; set; }
@@ -64,6 +72,7 @@ public class BattleLogic
         PartyEnemies = info.Enemies.GetRange(info.BattleSize, info.Enemies.Count - info.BattleSize);
         Weather = info.Weather;
         Outcome = Outcome.Undecided;
+        forcedOutcome = Outcome.Undecided;
         TurnNumber = 1;
         IsTrainerBattle = info.IsTrainerBattle;
         effectQueue = new List<EffectCommand>();
@@ -76,6 +85,14 @@ public class BattleLogic
             // only allies can get exp
             if (!pkmn.IsAlly) pkmn.ExpCandidates = new List<Pokemon>(ActiveAllies);
         }
+    }
+
+    /// <summary>
+    /// Immediately force the battle to have a specific outcome, possibly making it end early.
+    /// </summary>
+    public void SetForcedOutcome(Outcome forcedOutcome)
+    {
+        this.forcedOutcome = forcedOutcome;
     }
 
     public List<Pokemon> SortBySpeed()
@@ -175,14 +192,15 @@ public class BattleLogic
     /// <summary>
     /// Performs a full turn of the battle. The queues can have null elements. 
     /// <para/>
-    /// For every index, either the move or switch queue should include an action to perform (can't both be null at that index).
+    /// For every index, either the move, switch or item queue should include an action to perform (can't both be null at that index).
     /// <para/>
     /// The order of commands in the list should match the order in which Pokemons will act in the turn (sorted by speed).
     /// </summary>
-    /// <param name="moveQueue"> Queue of move commands, which can have null entries (switch performed instead). </param>
-    /// <param name="switchQueue"> Queue of switch commands, which can have null entries (move performed instead). </param>
+    /// <param name="moveQueue"> Queue of move commands, which can have null entries. </param>
+    /// <param name="switchQueue"> Queue of switch commands, which can have null entries. </param>
+    /// <param name="itemQueue"> Queue of switch commands, which can have null entries. </param>
     /// <returns></returns>
-    public IEnumerator Turn(List<MoveCommand> moveQueue, List<SwitchCommand> switchQueue)
+    public IEnumerator Turn(List<MoveCommand> moveQueue, List<SwitchCommand> switchQueue, List<ItemCommand> itemQueue)
     {
         if (Weather != Weather.None) yield return Print(WeatherToString());
 
@@ -216,13 +234,34 @@ public class BattleLogic
             user.WasForcedSwitch = false;
         }
 
-        // perform non-forced switches
+        // perform non-forced switches and item usages
         for (var i=0; i<order.Count; i++)
         {
             var user = order[i];
 
             if (switchQueue[i] != null)
                 yield return SwitchPokemon(switchQueue[i], order);
+            else if (itemQueue[i] != null)
+            {
+                var item = itemQueue[i].Item;
+                var target = itemQueue[i].Target;
+                var isPokeball = item.Category == ItemCategory.PokeballItem;
+
+                if (isPokeball) yield return Print($"{battleUI.PlayerInfo.Player.Name} threw a {item.Name} at {target.Name}!");
+                else yield return Print($"{battleUI.PlayerInfo.Player.Name} used a {item.Name} on {target.Name}!");
+
+                yield return item.Functions.Use(item, itemQueue[i].Target, battleUI);
+                yield return battleUI.NotifyUpdateHealth();
+                yield return item.Functions.OnUse(item, itemQueue[i].Target, battleUI);
+                yield return battleUI.NotifyUpdateHealth();
+            }
+        }
+
+        // possible early exit (already won/lost)
+        if (CheckVictory() != Outcome.Undecided)
+        {
+            battleUI.NotifyTurnFinished();
+            yield break;
         }
 
         // apply abilities (start of turn)
@@ -305,17 +344,6 @@ public class BattleLogic
             }
         }
 
-        // apply abilities (end of turn)
-        foreach (var user in order)
-        {
-            if (user.Health > 0)
-            {
-                yield return user.Ability.Functions.OnTurnEnding(user.Ability, user, battleUI);
-                yield return battleUI.NotifyUpdateHealth();
-                user.Ability.Turn++;
-            }
-        }
-
         // apply effects (end of turn)
         for (var i = 0; i < effectQueue.Count; i++)
         {
@@ -326,8 +354,20 @@ public class BattleLogic
             if (effect.Trigger == Trigger.EndOfTurn)
                 yield return ApplyEffect(cmd, i, order);
 
-            effect.Turn++;
-        } 
+            if (cmd.Target.IsAlly ? ActiveAllies.Contains(cmd.Target) : ActiveEnemies.Contains(cmd.Target))
+                effect.Turn++;
+        }
+
+        // apply abilities (end of turn)
+        foreach (var user in order)
+        {
+            if (user.Health > 0)
+            {
+                yield return user.Ability.Functions.OnTurnEnding(user.Ability, user, battleUI);
+                yield return battleUI.NotifyUpdateHealth();
+                user.Ability.Turn++;
+            }
+        }
 
         // end the turn, updating battle state
         TurnNumber++;
@@ -470,6 +510,7 @@ public class BattleLogic
     {
         if (cmd == null) yield break;
         var target = specificTarget ?? cmd.Target;
+        if (target.IsAlly ? !ActiveAllies.Contains(target) : !ActiveEnemies.Contains(target)) yield break;
 
         if (cmd.Effect.Turn > cmd.Effect.Duration)
         {
@@ -574,6 +615,12 @@ public class BattleLogic
     /// </summary>
     private Outcome CheckVictory()
     {
+        if (forcedOutcome != Outcome.Undecided)
+        {
+            Outcome = forcedOutcome;
+            return Outcome;
+        }
+
         if (PartyAllies.Concat(ActiveAllies).All(pkmn => pkmn.Health <= 0)) Outcome = Outcome.Loss;
         else if (PartyEnemies.Concat(ActiveEnemies).All(pkmn => pkmn.Health <= 0)) Outcome = Outcome.Win;
         else Outcome = Outcome.Undecided;

@@ -24,6 +24,7 @@ MonoBehaviour:
   spDefStat: 50
   spdStat: 65
   expGroup: 3
+  catchRate: 45
   expStat: 62
   maleChance: 87.5
   learnableAbilities:

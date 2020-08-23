@@ -4172,7 +4172,7 @@ GameObject:
   - component: {fileID: 1025324967}
   - component: {fileID: 1025324966}
   m_Layer: 5
-  m_Name: Bag
+  m_Name: Party
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -4229,7 +4229,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1.1
-  m_Text: Bag
+  m_Text: Party
 --- !u!222 &1025324967
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -8031,7 +8031,7 @@ GameObject:
   - component: {fileID: 2077779786}
   - component: {fileID: 2077779785}
   m_Layer: 5
-  m_Name: Party
+  m_Name: Bag
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -8088,7 +8088,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1.1
-  m_Text: Party
+  m_Text: Bag
 --- !u!222 &2077779786
 CanvasRenderer:
   m_ObjectHideFlags: 0

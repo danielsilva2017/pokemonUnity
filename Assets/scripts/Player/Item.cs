@@ -21,7 +21,7 @@ public class Item
     public string Name { get { return Skeleton.itemName; } }
     public string Description { get { return Skeleton.description; } }
     public Sprite Sprite { get { return Skeleton.sprite; } }
-    public ItemCategory Category { get { return Skeleton.category; } }
+    public ItemCategory Category { get { return Skeleton.bagCategory; } }
     public ItemLogic Logic { get { return Skeleton.logic; } }
 
     // use reflection to find the correct item logic
