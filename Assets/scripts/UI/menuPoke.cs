@@ -8,7 +8,8 @@ public class MenuPoke: MonoBehaviour, ITransitionable
 {
     public GameObject menu;
     public PlayerLogic playerLogic;
-    public OverworldParty party;
+    public OverworldParty partyMenu;
+    public OverworldBag bagMenu;
     public SpriteRenderer transition;
     public AudioSource buttonPress;
     public Text pokemon;
@@ -77,9 +78,10 @@ public class MenuPoke: MonoBehaviour, ITransitionable
             switch (selectionIndex)
             {
                 case 0:
-                    playerLogic.playerUI.MenuTransition(menu, party, party.gameObject);
+                    playerLogic.playerUI.MenuTransition(menu, partyMenu, partyMenu.gameObject);
                     break;
                 case 1:
+                    playerLogic.playerUI.MenuTransition(menu, bagMenu, bagMenu.gameObject);
                     break;
                 case 2:
                     break;

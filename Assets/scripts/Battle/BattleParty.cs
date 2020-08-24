@@ -15,7 +15,7 @@ public class BattleParty : MonoBehaviour
     public HUD hud;
 
     private IBattle Battle;
-    private readonly Slot[] slots = new Slot[6];
+    private readonly PartySlot[] slots = new PartySlot[6];
     private Sprite[] slotBackgrounds; // selected, not selected, none, selected dead, not selected dead
     private Sprite[] statuses; // psn, bpsn, slp, par, frz, brn, fnt
     private int selectionIndex;
@@ -30,7 +30,7 @@ public class BattleParty : MonoBehaviour
         statuses = Resources.LoadAll<Sprite>("Images/status");
 
         for (var i = 0; i < 6; i++)
-            slots[i] = new Slot(partyMemberObjects[i]);
+            slots[i] = new PartySlot(partyMemberObjects[i]);
     }
 
     // Update is called once per frame
@@ -141,7 +141,7 @@ public class BattleParty : MonoBehaviour
         }
     }
 
-    private void AddHighlight(Slot slot)
+    private void AddHighlight(PartySlot slot)
     {
         slot.HealthBarSelected.enabled = true;
         slot.HealthBarSelected.transform.localScale = slot.HealthBar.transform.localScale;
@@ -149,7 +149,7 @@ public class BattleParty : MonoBehaviour
         slot.Background.sprite = slot.Pokemon.Status == Status.Fainted ? slotBackgrounds[4] : slotBackgrounds[0];
     }
 
-    private void RemoveHighlight(Slot slot)
+    private void RemoveHighlight(PartySlot slot)
     {
         slot.HealthBar.enabled = true;
         slot.HealthBar.transform.localScale = slot.HealthBarSelected.transform.localScale;
@@ -165,7 +165,7 @@ public class BattleParty : MonoBehaviour
         return $"{dex}MS";
     }
 
-    private void FillSlot(Pokemon pokemon, Slot slot, bool isSelected)
+    private void FillSlot(Pokemon pokemon, PartySlot slot, bool isSelected)
     {
         slot.Pokemon = pokemon;
         slot.Name.text = pokemon.Name;
@@ -197,7 +197,7 @@ public class BattleParty : MonoBehaviour
         }
     }
 
-    private void EmptySlot(Slot slot)
+    private void EmptySlot(PartySlot slot)
     {
         slot.Name.enabled = false;
         slot.Sprite.enabled = false;

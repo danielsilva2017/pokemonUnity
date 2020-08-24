@@ -32,7 +32,7 @@ public abstract class ItemFunctions
 /// </summary>
 public enum ItemLogic
 {
-    PokeBall, SuperPotion
+    PokeBall, SuperPotion, HyperPotion
 }
 
 public class PokeBall : ItemFunctions
@@ -85,6 +85,23 @@ public class SuperPotion : ItemFunctions
     public override IEnumerator Use(Item item, Pokemon target, IBattle battle)
     {
         heal = Math.Min(50, target.MaxHealth - target.Health);
+        target.Health += heal;
+        yield break;
+    }
+
+    public override IEnumerator OnUse(Item item, Pokemon target, IBattle battle)
+    {
+        yield return battle.Print($"{target.Name} recovered {heal} health!");
+    }
+}
+
+public class HyperPotion : ItemFunctions
+{
+    int heal;
+
+    public override IEnumerator Use(Item item, Pokemon target, IBattle battle)
+    {
+        heal = Math.Min(200, target.MaxHealth - target.Health);
         target.Health += heal;
         yield break;
     }
