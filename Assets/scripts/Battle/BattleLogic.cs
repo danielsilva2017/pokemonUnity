@@ -50,7 +50,6 @@ public class BattleLogic
 {
     private IBattle battleUI;
     private List<EffectCommand> effectQueue; // some elements may be null
-    private Outcome forcedOutcome;
 
     public int BattleSize { get; set; }
     public int TurnNumber { get; set; }
@@ -72,7 +71,6 @@ public class BattleLogic
         PartyEnemies = info.Enemies.GetRange(info.BattleSize, info.Enemies.Count - info.BattleSize);
         Weather = info.Weather;
         Outcome = Outcome.Undecided;
-        forcedOutcome = Outcome.Undecided;
         TurnNumber = 1;
         IsTrainerBattle = info.IsTrainerBattle;
         effectQueue = new List<EffectCommand>();
@@ -85,14 +83,6 @@ public class BattleLogic
             // only allies can get exp
             if (!pkmn.IsAlly) pkmn.ExpCandidates = new List<Pokemon>(ActiveAllies);
         }
-    }
-
-    /// <summary>
-    /// Immediately force the battle to have a specific outcome, possibly making it end early.
-    /// </summary>
-    public void SetForcedOutcome(Outcome forcedOutcome)
-    {
-        this.forcedOutcome = forcedOutcome;
     }
 
     public List<Pokemon> SortBySpeed()
@@ -250,9 +240,9 @@ public class BattleLogic
                 if (isPokeball) yield return Print($"{battleUI.PlayerInfo.Player.Name} threw a {item.Name} at {target.Name}!");
                 else yield return Print($"{battleUI.PlayerInfo.Player.Name} used a {item.Name} on {target.Name}!");
 
-                yield return item.Functions.Use(item, itemQueue[i].Target, battleUI);
+                yield return item.Functions.Use(item, itemQueue[i].Target, battleUI.Chatbox);
                 yield return battleUI.NotifyUpdateHealth();
-                yield return item.Functions.OnUse(item, itemQueue[i].Target, battleUI);
+                yield return item.Functions.OnUse(item, itemQueue[i].Target, battleUI.Chatbox);
                 yield return battleUI.NotifyUpdateHealth();
             }
         }
@@ -615,6 +605,7 @@ public class BattleLogic
     /// </summary>
     private Outcome CheckVictory()
     {
+        var forcedOutcome = SceneInfo.ConsumeForcedOutcome();
         if (forcedOutcome != Outcome.Undecided)
         {
             Outcome = forcedOutcome;

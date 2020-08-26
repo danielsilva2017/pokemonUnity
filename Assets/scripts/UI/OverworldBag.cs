@@ -22,6 +22,8 @@ public class OverworldBag : MonoBehaviour, ITransitionable
 {
     public GameObject bag;
     public MenuPoke menu;
+    public OverworldParty party;
+    public OverworldDialog chatbox;
     public PlayerLogic playerLogic;
     public Text bagType;
     public Image itemIcon;
@@ -37,8 +39,13 @@ public class OverworldBag : MonoBehaviour, ITransitionable
     private int selectionIndex; // UI selection index (up/down)
     private int bagTypeIndex; // UI selection index (left/right)
     private int itemIndex; // actual bag list index of selected item
+    private int confirmationIndex; // confirmation box selection index
+    private bool askingConfirmation;
 
     public bool IsBusy { get; set; }
+    public Item ItemToUse { get; set; }
+    public int ItemToUseIndex { get; set; }
+    public GameObject GameObject { get { return gameObject; } }
 
     // Start is called before the first frame update
     void Start()
@@ -47,13 +54,18 @@ public class OverworldBag : MonoBehaviour, ITransitionable
             slots[i] = new BagSlot(bagObjects[i]);
 
         bag.SetActive(false);
+        chatbox.gameObject.SetActive(false);
+        chatbox.confirmationObject.SetActive(false);
     }
 
     // Update is called once per frame
     void Update()
     {
         if (!IsBusy)
-            ItemPicker();
+        {
+            if (askingConfirmation) ConfirmationPicker();
+            else ItemPicker();
+        }  
     }
 
     public void Init()
@@ -63,6 +75,56 @@ public class OverworldBag : MonoBehaviour, ITransitionable
 
         bagType.text = GetBagType();
         FocusListOnSelection();
+    }
+
+    private void ConfirmationPicker()
+    {
+        var oldConfirmationIndex = confirmationIndex;
+
+        if (Input.GetKeyDown(KeyCode.UpArrow)) confirmationIndex = confirmationIndex == 1 ? 0 : 1;
+        if (Input.GetKeyDown(KeyCode.DownArrow)) confirmationIndex = confirmationIndex == 0 ? 1 : 0;
+
+        if (oldConfirmationIndex != confirmationIndex)
+        {
+            chatSound.Play();
+            if (confirmationIndex == 0) chatbox.ConfirmationBox.CursorYes();
+            else chatbox.ConfirmationBox.CursorNo();
+        }
+
+        // back to bag
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            ReturnToItemSelection();
+            return;
+        }
+
+        // use or cancel
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            if (confirmationIndex == 0) // yes
+            {
+                if (ItemToUse.Usage == ItemUsage.TargetsPlayer)
+                    StartCoroutine(UseItemOnPlayer());
+                else
+                {
+                    askingConfirmation = false;
+                    chatbox.confirmationObject.SetActive(false);
+                    playerLogic.playerUI.MenuTransition(this, party);
+                }   
+            }
+            else // no
+            {
+                ReturnToItemSelection();
+            }
+        }
+    }
+
+    private void ReturnToItemSelection()
+    {
+        chatbox.gameObject.SetActive(false);
+        chatbox.confirmationObject.SetActive(false);
+        ItemToUse = null;
+        askingConfirmation = false;
     }
 
     private void ItemPicker()
@@ -112,21 +174,72 @@ public class OverworldBag : MonoBehaviour, ITransitionable
             Init();
         }
 
-        // back to actions
+        // back to menu
         if (Input.GetKeyDown(KeyCode.X))
         {
             menu.SetSelectionIndex(1);
-            playerLogic.playerUI.MenuTransition(bag, menu, menu.gameObject);
+            playerLogic.playerUI.MenuTransition(this, menu);
             return;
         }
 
         if (Input.GetKeyDown(KeyCode.Z))
         {
-            //if (chatbox.IsBusy) return;
+            if (chatbox.IsBusy || list.Count == 0) return;
+
+            var item = list[selectionIndex].item;
 
             chatSound.Play();
-            //to do
+            if (item.Usage == ItemUsage.TargetsEnemy)
+                chatbox.PrintSilent("This item can't be used right now.");
+            else
+            {
+                ItemToUse = item;
+                ItemToUseIndex = itemIndex;
+                StartCoroutine(SummonConfirmationBox());
+            }
+                
         }
+    }
+
+    private IEnumerator SummonConfirmationBox()
+    {
+        IsBusy = true;
+        chatbox.gameObject.SetActive(true);
+        yield return chatbox.Print($"Use the {ItemToUse.Name}?");
+        chatbox.confirmationObject.SetActive(true);
+        confirmationIndex = 0;
+        chatbox.ConfirmationBox.CursorYes();
+        askingConfirmation = true;
+        IsBusy = false;
+    }
+
+    private IEnumerator UseItemOnPlayer()
+    {
+        IsBusy = true;
+        askingConfirmation = false;
+        chatbox.confirmationObject.SetActive(false);
+        if (!ItemToUse.Functions.CanBeUsed(ItemToUse, playerLogic))
+        {
+            yield return chatbox.Print($"This item can't be used right now.");
+        }
+        else
+        {
+            playerLogic.Player.Bag.TakeItem(ItemToUse, itemIndex, 1);
+            yield return ItemToUse.Functions.Use(ItemToUse, playerLogic, chatbox);
+            yield return ItemToUse.Functions.OnUse(ItemToUse, playerLogic, chatbox);
+        }
+
+        while (true)
+        {
+            if (Input.GetKeyDown(KeyCode.Z))
+            {
+                IsBusy = false;
+                ReturnToItemSelection();
+                Init();
+                break;
+            }
+            else yield return null;
+        } 
     }
 
     private void AddHighlight(BagSlot slot, Item item)

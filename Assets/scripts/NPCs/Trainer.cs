@@ -16,6 +16,7 @@ public class Trainer : NPC
 {
     public string trainerName;
     public string trainerClass;
+    public AudioSource music;
     [TextArea] public string[] dialogue;
     [TextArea] public string[] defeatDialogue;
     [TextArea] public string[] postDialogue;

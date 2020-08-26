@@ -26,6 +26,7 @@ public class BattleParty : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Debug.Log("st");
         slotBackgrounds = Resources.LoadAll<Sprite>("Images/party_entries");
         statuses = Resources.LoadAll<Sprite>("Images/status");
 
@@ -43,6 +44,7 @@ public class BattleParty : MonoBehaviour
 
     public void Init(IBattle battle, bool forcedSwitch)
     {
+        Debug.Log("iniyt");
         Battle = battle;
         chatbox.SetState(ChatState.Party);
         StartCoroutine(chatbox.Print("Select your Pokemon.", true));

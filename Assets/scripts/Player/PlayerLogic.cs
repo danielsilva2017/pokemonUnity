@@ -56,6 +56,7 @@ public class PlayerLogic : MonoBehaviour
 
         overworld.locationMusic.Play();
         isInteractionFinished = true;
+        StartCoroutine(PlayEnterSceneTransition());
     }
 
     void Awake()
@@ -65,7 +66,7 @@ public class PlayerLogic : MonoBehaviour
 
     void Update()
     {
-        if (!isInteractionFinished) return; // drop inputs
+        if (!isInteractionFinished || isBusy) return; // drop inputs
 
         if (interactionForbiddenFrames > 0) // stop user from beginning interaction on the same keypress that ended one
             interactionForbiddenFrames--;
@@ -73,7 +74,10 @@ public class PlayerLogic : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.Return) && !playerUI.menu.IsBusy) // open/close side menu
             isUsingMenu = playerUI.menu.Toggle();
 
-        if (!isMoving && !isJumping && !isUsingMenu && !isBusy) // process movement if not busy
+        if (Input.GetKeyUp(KeyCode.X) && isUsingMenu) // x also closes menu
+            isUsingMenu = playerUI.menu.Toggle();
+
+        if (!isMoving && !isJumping && !isUsingMenu) // process movement if not busy
         {
             // interact with something if it exists
             if (Input.GetKeyDown(KeyCode.Z) && interactable != null)
@@ -114,14 +118,18 @@ public class PlayerLogic : MonoBehaviour
         }
 
         //only run while pressing key
-        if (Input.GetKeyDown(KeyCode.X))
-            isRunning = true;
-        else if (Input.GetKeyUp(KeyCode.X))
-            isRunning = false;
+        isRunning = Input.GetKey(KeyCode.X);
 
         animator.SetBool("isMoving", isMoving);
         animator.SetBool("isRunning", isRunning);
         animator.SetBool("isJumping", isJumping);
+    }
+
+    private IEnumerator PlayEnterSceneTransition()
+    {
+        isBusy = true;
+        yield return playerUI.EnterSceneTransition();
+        isBusy = false;
     }
 
     // IEnumerator is used to do something over a period of time -  move current to target pos over a period of time

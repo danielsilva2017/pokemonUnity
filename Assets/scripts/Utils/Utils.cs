@@ -109,6 +109,15 @@ public class Utils
         image.color = new Color(image.color.r, image.color.g, image.color.b, 1);
     }
 
+
+    /// <summary>
+    /// Makes a sprite visible.
+    /// </summary>
+    public static void MakeVisible(SpriteRenderer sprite)
+    {
+        sprite.color = new Color(sprite.color.r, sprite.color.g, sprite.color.b, 1);
+    }
+
     /// <summary>
     /// Fades a sprite in (true) or out (false).
     /// </summary>

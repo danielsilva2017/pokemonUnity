@@ -36,7 +36,7 @@ public abstract class NPC : MonoBehaviour
             if (chatbox.IsBusy) return;
 
             if ((next = NextDialogue()) != null)
-                chatbox.Print(next);
+                chatbox.PrintWithSound(next);
             else
             {
                 IsInteracting = false;
@@ -58,7 +58,7 @@ public abstract class NPC : MonoBehaviour
     {
         PlayerLogic = playerLogic;
         chatbox.Show();
-        chatbox.Print(NextDialogue());
+        chatbox.PrintWithSound(NextDialogue());
         IsInteracting = true;
     }
 

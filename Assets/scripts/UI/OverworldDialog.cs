@@ -3,19 +3,57 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class OverworldDialog : MonoBehaviour
+public interface IDialog
+{
+    IEnumerator Print(string message, bool immediate = false);
+}
+
+public class ConfirmationBox
+{
+    public Text[] options;
+    public Image[] arrows;
+
+    public ConfirmationBox(GameObject gameObject)
+    {
+        options = new Text[]{ gameObject.transform.GetChild(0).GetComponent<Text>(),
+                              gameObject.transform.GetChild(1).GetComponent<Text>() };
+        arrows = new Image[]{ gameObject.transform.GetChild(0).GetChild(0).GetComponent<Image>(),
+                              gameObject.transform.GetChild(1).GetChild(0).GetComponent<Image>() };
+    }
+
+    public void CursorYes()
+    {
+        options[0].color = Color.blue;
+        options[1].color = Color.black;
+        arrows[0].enabled = true;
+        arrows[1].enabled = false;
+    }
+
+    public void CursorNo()
+    {
+        options[1].color = Color.blue;
+        options[0].color = Color.black;
+        arrows[1].enabled = true;
+        arrows[0].enabled = false;
+    }
+}
+
+public class OverworldDialog : MonoBehaviour, IDialog
 {
     public GameObject chatbox;
+    public GameObject confirmationObject;
     public Text chatText;
     public AudioSource buttonPress;
 
     private readonly int framesPerChar = 2;
 
     public bool IsBusy { get; set; }
+    public ConfirmationBox ConfirmationBox { get; set; }
 
     // Start is called before the first frame update
     void Start()
     {
+        ConfirmationBox = new ConfirmationBox(confirmationObject);
         Hide();
     }
 
@@ -27,13 +65,13 @@ public class OverworldDialog : MonoBehaviour
 
     public void PrintSilent(string message, bool immediate = false)
     {
-        StartCoroutine(PrintRoutine(message, immediate));
+        StartCoroutine(Print(message, immediate));
     }
 
-    public void Print(string message, bool immediate = false)
+    public void PrintWithSound(string message, bool immediate = false)
     {
         buttonPress.Play();
-        StartCoroutine(PrintRoutine(message, immediate));
+        StartCoroutine(Print(message, immediate));
     }
 
     public void Show()
@@ -46,7 +84,7 @@ public class OverworldDialog : MonoBehaviour
         chatbox.SetActive(false);
     }
 
-    private IEnumerator PrintRoutine(string message, bool immediate)
+    public IEnumerator Print(string message, bool immediate = false)
     {
         if (immediate)
         {

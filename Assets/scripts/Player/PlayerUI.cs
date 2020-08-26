@@ -7,6 +7,8 @@ using static Utils;
 public interface ITransitionable
 {
     void Init();
+    bool IsBusy { get; set; }
+    GameObject GameObject { get; }
 }
 
 public class PlayerUI : MonoBehaviour
@@ -16,7 +18,8 @@ public class PlayerUI : MonoBehaviour
     public GameObject routeHeaders;
     public SpriteRenderer introEffect;
     public SpriteRenderer transition;
-    public AudioSource battleIntroSound;
+    public AudioSource wildBattleMusic;
+    public OverworldDialog chatbox;
 
     public Image RouteHeader { get; set; }
     public Text RouteName { get; set; }
@@ -31,7 +34,7 @@ public class PlayerUI : MonoBehaviour
         RouteShowPosition = routeHeaders.transform.GetChild(1).GetComponent<RectTransform>();
         RouteHidePosition = routeHeaders.transform.GetChild(2).GetComponent<RectTransform>();
         introEffect.gameObject.SetActive(false);
-        transition.gameObject.SetActive(false);
+        //transition.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -40,10 +43,23 @@ public class PlayerUI : MonoBehaviour
         
     }
 
+    public IEnumerator EnterSceneTransition()
+    {
+        transition.gameObject.SetActive(true);
+        transition.transform.position = mainCamera.ScreenToWorldPoint(new Vector3(
+            transform.position.x + Screen.width / 2,
+            transform.position.y + Screen.height / 2,
+            transform.position.z
+        ));
+        MakeVisible(transition);
+        yield return FadeOut(transition, 20);
+        transition.gameObject.SetActive(false);
+    }
+
     public IEnumerator WildBattleTransition()
     {
+        SceneInfo.PlayBattleMusic(wildBattleMusic);
         introEffect.gameObject.SetActive(true);
-        battleIntroSound.Play();
         MakeInvisible(introEffect);
         introEffect.transform.position = transform.position;
 
@@ -63,7 +79,6 @@ public class PlayerUI : MonoBehaviour
 
             mainCamera.orthographicSize = i;
             introEffect.color = new Color(introEffect.color.r, introEffect.color.g, introEffect.color.b, introEffect.color.a + 0.025f);
-            battleIntroSound.volume -= 0.004f;
             yield return null;
         }
     }
@@ -71,22 +86,25 @@ public class PlayerUI : MonoBehaviour
     /// <summary>
     /// Switches active menus while also showing a fade in and out animation.
     /// </summary>
-    public void MenuTransition(GameObject oldScreen, ITransitionable newScreenScript, GameObject newScreen)
+    public void MenuTransition(ITransitionable oldScreenScript, ITransitionable newScreenScript)
     {
-        StartCoroutine(PerformScreenTransition(oldScreen, newScreenScript, newScreen));
+        StartCoroutine(PerformScreenTransition(oldScreenScript, newScreenScript));
     }
 
-    private IEnumerator PerformScreenTransition(GameObject oldScreen, ITransitionable newScreenScript, GameObject newScreen)
+    private IEnumerator PerformScreenTransition(ITransitionable oldScreenScript, ITransitionable newScreenScript)
     {
+        oldScreenScript.IsBusy = true;
         transition.gameObject.SetActive(true);
         transition.transform.position = transform.position;
         yield return FadeIn(transition, 10);
 
-        oldScreen.SetActive(false);
-        newScreen.SetActive(true);
+        oldScreenScript.GameObject.SetActive(false);
+        newScreenScript.GameObject.SetActive(true);
+        newScreenScript.IsBusy = true;
         newScreenScript.Init();
         yield return FadeOut(transition, 10);
 
+        newScreenScript.IsBusy = false;
         transition.gameObject.SetActive(false);
     }
 

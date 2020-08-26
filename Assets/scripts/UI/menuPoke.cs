@@ -20,7 +20,8 @@ public class MenuPoke: MonoBehaviour, ITransitionable
     private int selectionIndex;
 
     public bool IsBusy { get; set; }
-        
+    public GameObject GameObject { get { return gameObject; } }
+
     // Start is called before the first frame update
     void Start()
     {   
@@ -78,10 +79,10 @@ public class MenuPoke: MonoBehaviour, ITransitionable
             switch (selectionIndex)
             {
                 case 0:
-                    playerLogic.playerUI.MenuTransition(menu, partyMenu, partyMenu.gameObject);
+                    playerLogic.playerUI.MenuTransition(this, partyMenu);
                     break;
                 case 1:
-                    playerLogic.playerUI.MenuTransition(menu, bagMenu, bagMenu.gameObject);
+                    playerLogic.playerUI.MenuTransition(this, bagMenu);
                     break;
                 case 2:
                     break;

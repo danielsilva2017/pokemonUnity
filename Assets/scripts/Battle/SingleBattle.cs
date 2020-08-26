@@ -22,7 +22,7 @@ public class SingleBattle : MonoBehaviour, IBattle
     public AudioSource notVeryEffectiveSound;
     public AudioSource superEffectiveSound;
     public AudioSource levelUpSound;
-    public AudioSource music;
+    public SpriteRenderer transition;
 
     private int orderIndex;
     private int actionIndex;
@@ -36,6 +36,7 @@ public class SingleBattle : MonoBehaviour, IBattle
 
     public BattleState BattleState { get; set; }
     public BattleLogic Logic { get; private set; }
+    public IDialog Chatbox { get { return chatbox; } }
     public BattleInfo BattleInfo { get; private set; }
     public PlayerInfo PlayerInfo { get; private set; }
 
@@ -63,6 +64,7 @@ public class SingleBattle : MonoBehaviour, IBattle
         // UI setup
         Application.targetFrameRate = 60;
         partyCanvas.SetActive(false);
+        transition.gameObject.SetActive(false);
         playerUnit.Setup(Logic.ActiveAllies[0]);
         enemyUnit.Setup(Logic.ActiveEnemies[0]);
         hud.Init(playerUnit.Pokemon, enemyUnit.Pokemon);
@@ -71,14 +73,12 @@ public class SingleBattle : MonoBehaviour, IBattle
         // Battle intro
         BattleState = BattleState.Intro;
         StartCoroutine(BattleIntro());
-        music.volume = 0.75f;
-        music.Play();
-    }
+    }   
 
     private IEnumerator BattleIntro()
     {
         chatbox.SetState(ChatState.None);
-        yield return hud.IntroEffect(music);
+        yield return hud.IntroEffect();
 
         chatbox.SetState(ChatState.ChatOnly);
         yield return Print($"Wild {enemyUnit.Name} appeared!");
@@ -187,7 +187,7 @@ public class SingleBattle : MonoBehaviour, IBattle
                     chatSound.Play();
                     if (index < dialogue.Length) yield return Print(dialogue[index], false);
                     else if (index == dialogue.Length) yield return Print($"{PlayerInfo.Player.Name} got {BattleInfo.Trainer.money}€ for winning!", false);
-                    else SceneInfo.ReturnToOverworldFromBattle();
+                    else StartCoroutine(ReturnToOverworld());
                     index++;
                 }
                 else yield return null;
@@ -195,7 +195,7 @@ public class SingleBattle : MonoBehaviour, IBattle
         }
         else
         {
-            SceneInfo.ReturnToOverworldFromBattle();
+            StartCoroutine(ReturnToOverworld());
         }
     }
 
@@ -228,7 +228,7 @@ public class SingleBattle : MonoBehaviour, IBattle
                         yield return Print($"{PlayerInfo.Player.Name} blacked out!", false);
                         break;
                     case 3:
-                        SceneInfo.ReturnToOverworldFromBattle();
+                        StartCoroutine(ReturnToOverworld());
                         break;
                 }
             }
@@ -244,7 +244,7 @@ public class SingleBattle : MonoBehaviour, IBattle
         {
             if (Input.GetKeyDown(KeyCode.Z))
             {
-                SceneInfo.ReturnToOverworldFromBattle();
+                StartCoroutine(ReturnToOverworld());
                 break;
             }
             else yield return null;
@@ -253,17 +253,42 @@ public class SingleBattle : MonoBehaviour, IBattle
 
     private IEnumerator OnCaught()
     {
-        yield return Print("<pokedex data here soon>", false);
+        var pokemonsInParty = PlayerInfo.Player.Pokemons;
+        var index = 0;
 
-        while (true)
+        pokemonsInParty.Add(enemyUnit.Pokemon);
+        yield return Print($"{enemyUnit.Pokemon.Name} was caught!", false);
+        if (pokemonsInParty.Count < 6) index++;
+
+        while (index <= 2)
         {
             if (Input.GetKeyDown(KeyCode.Z))
             {
-                SceneInfo.ReturnToOverworldFromBattle();
-                break;
+                chatSound.Play();
+                switch (index++)
+                {
+                    case 0:
+                        yield return Print("<pokemon sent to PC (soon)>", false);
+                        break;
+                    case 1:
+                        yield return Print("<pokedex data here soon>", false);
+                        break;
+                    case 2:
+                        StartCoroutine(ReturnToOverworld());
+                        break;
+                }
             }
             else yield return null;
         }
+    }
+
+    private IEnumerator ReturnToOverworld()
+    {
+        BattleState = BattleState.Idle;
+        transition.gameObject.SetActive(true);
+        MakeInvisible(transition);
+        yield return FadeIn(transition, 20);
+        SceneInfo.ReturnToOverworldFromBattle();
     }
 
     public IEnumerator NotifyUpdateHealth(bool immediate = false)
@@ -425,7 +450,6 @@ public class SingleBattle : MonoBehaviour, IBattle
         // reset pointers
         chatbox.actions[actionIndex].color = Color.black;
         chatbox.moves[moveIndex].color = Color.black;
-        actionIndex = 0;
         moveIndex = 0;
 
         if (orderIndex + 1 >= order.Count) // all choices made, begin turn

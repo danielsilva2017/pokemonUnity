@@ -17,4 +17,4 @@ MonoBehaviour:
   sprite: {fileID: 21300000, guid: 5e2554a5a677d1b4da97c9b7ef9b87ea, type: 3}
   bagCategory: 2
   usage: 0
-  logic: 2
+  logic: 6

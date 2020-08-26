@@ -8,7 +8,7 @@ public enum ChatState
     None, ChatOnly, SelectAction, SelectMove, Party
 }
 
-public class Dialog : MonoBehaviour
+public class Dialog : MonoBehaviour, IDialog
 {
     public Image chatbox;
     public Text chatText;

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using System;
 using static Utils;
 
 public class PartySlot
@@ -33,19 +34,26 @@ public class OverworldParty : MonoBehaviour, ITransitionable
 {
     public GameObject party;
     public GameObject[] partyMemberObjects;
+    public OverworldBag bag;
     public MenuPoke menu;
     public OverworldDialog chatbox;
     public PlayerLogic playerLogic;
     public SpriteRenderer transition;
     public AudioSource chatSound;
+    public AudioSource healthUpSound;
 
     private readonly PartySlot[] slots = new PartySlot[6];
     private Sprite[] slotBackgrounds; // selected, not selected, none, selected dead, not selected dead
     private Sprite[] statuses; // psn, bpsn, slp, par, frz, brn, fnt
     private int selectionIndex;
     private int amountInParty;
+    private int confirmationIndex; // confirmation box selection index
+    private bool askingConfirmation;
+    private readonly float updateSpeed = 160f; // amount of frames required to fill/empty a bar
 
     public bool IsBusy { get; set; }
+    public PartySlot SlotToUse { get; set; }
+    public GameObject GameObject { get { return gameObject; } }
 
     // Start is called before the first frame update
     void Start()
@@ -63,13 +71,16 @@ public class OverworldParty : MonoBehaviour, ITransitionable
     void Update()
     {
         if (!IsBusy)
-            PokemonPicker();
+        {
+            if (askingConfirmation) ConfirmationPicker();
+            else PokemonPicker();
+        }
     }
 
     public void Init()
     {
         chatbox.gameObject.SetActive(true);
-        chatbox.Print("Select a Pokemon.", true);
+        chatbox.PrintWithSound("Select a Pokemon.", true);
 
         // reset pointer
         selectionIndex = 0;
@@ -87,6 +98,137 @@ public class OverworldParty : MonoBehaviour, ITransitionable
             EmptySlot(slots[i]);
 
         amountInParty = playerLogic.Player.Pokemons.Count;
+    }
+
+    private IEnumerator UpdateSlot(PartySlot slot)
+    {
+        var pokemon = slot.Pokemon;
+
+        if (pokemon.Status == Status.None)
+            MakeInvisible(slot.Status);
+        else
+        {
+            MakeVisible(slot.Status);
+            slot.Status.sprite = statuses[(int) pokemon.Status];
+        }
+
+        var currentScale = slot.HealthBarSelected.transform.localScale.x;
+        var newScale = pokemon.Health * 1f / pokemon.MaxHealth;
+        var bardiff = newScale - currentScale;
+
+        // stop when there's nothing to update - consider fp inaccuracies
+        if (Math.Abs(bardiff) < 0.0001f) yield break;
+
+        slot.Background.sprite = pokemon.Status == Status.Fainted ? slotBackgrounds[4] : slotBackgrounds[0];
+
+        var oldHealth = Mathf.FloorToInt(currentScale * pokemon.MaxHealth);
+        var numdiff = pokemon.Health - oldHealth;
+        var frames = Math.Abs(bardiff) * updateSpeed;
+
+        healthUpSound.Play();
+        for (var i = 0; i <= frames; i++)
+        {
+            slot.Health.text = $"{Math.Max(0, Mathf.FloorToInt(oldHealth + numdiff * i / frames))}<size=5> </size>/<size=5> </size>{pokemon.MaxHealth}";
+            slot.HealthBarSelected.transform.localScale = new Vector3(currentScale + bardiff * i / frames, 1f, slot.HealthBarSelected.transform.localScale.z);
+            yield return null;
+        }
+        healthUpSound.Stop();
+
+        // ensure correct numbers are shown at the end
+        slot.Health.text = $"{pokemon.Health}<size=5> </size>/<size=5> </size>{pokemon.MaxHealth}";
+        slot.HealthBarSelected.transform.localScale = new Vector3(newScale, 1f, slot.HealthBarSelected.transform.localScale.z);
+    }
+
+    private void ConfirmationPicker()
+    {
+        var oldConfirmationIndex = confirmationIndex;
+
+        if (Input.GetKeyDown(KeyCode.UpArrow)) confirmationIndex = confirmationIndex == 1 ? 0 : 1;
+        if (Input.GetKeyDown(KeyCode.DownArrow)) confirmationIndex = confirmationIndex == 0 ? 1 : 0;
+
+        if (oldConfirmationIndex != confirmationIndex)
+        {
+            chatSound.Play();
+            if (confirmationIndex == 0) chatbox.ConfirmationBox.CursorYes();
+            else chatbox.ConfirmationBox.CursorNo();
+        }
+
+        // back to bag
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            ReturnToPokemonSelection();
+            return;
+        }
+
+        // use or cancel
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            if (confirmationIndex == 0) // yes
+            {
+                StartCoroutine(UseItemOnPokemon());
+            }
+            else // no
+            {
+                ReturnToPokemonSelection();
+            }
+        }
+    }
+
+    private IEnumerator UseItemOnPokemon()
+    {
+        IsBusy = true;
+        chatbox.confirmationObject.SetActive(false);
+        if (!bag.ItemToUse.Functions.CanBeUsed(bag.ItemToUse, SlotToUse.Pokemon))
+        {
+            yield return chatbox.Print($"This item can't be used on {SlotToUse.Pokemon.Name} right now.");
+        }
+        else
+        {
+            playerLogic.Player.Bag.TakeItem(bag.ItemToUse, bag.ItemToUseIndex, 1);
+            yield return bag.ItemToUse.Functions.Use(bag.ItemToUse, SlotToUse.Pokemon, chatbox);
+            yield return UpdateSlot(SlotToUse);
+            yield return bag.ItemToUse.Functions.OnUse(bag.ItemToUse, SlotToUse.Pokemon, chatbox);
+        }
+
+        while (true)
+        {
+            if (Input.GetKeyDown(KeyCode.Z))
+            {
+                IsBusy = false;
+                ReturnToItemSelection();
+                break;
+            }
+            else yield return null;
+        }
+    }
+
+    private void ReturnToPokemonSelection()
+    {
+        chatbox.gameObject.SetActive(false);
+        chatbox.confirmationObject.SetActive(false);
+        SlotToUse = null;
+        askingConfirmation = false;
+    }
+
+    private void ReturnToItemSelection()
+    {
+        chatbox.gameObject.SetActive(false);
+        chatbox.confirmationObject.SetActive(false);
+        SlotToUse = null;
+        askingConfirmation = false;
+        playerLogic.playerUI.MenuTransition(this, bag);
+    }
+
+    private IEnumerator SummonConfirmationBox()
+    {
+        IsBusy = true;
+        chatbox.gameObject.SetActive(true);
+        yield return chatbox.Print($"Use the {bag.ItemToUse.Name} on {SlotToUse.Pokemon.Name}?");
+        chatbox.confirmationObject.SetActive(true);
+        confirmationIndex = 0;
+        chatbox.ConfirmationBox.CursorYes();
+        askingConfirmation = true;
+        IsBusy = false;
     }
 
     private void PokemonPicker()
@@ -112,7 +254,7 @@ public class OverworldParty : MonoBehaviour, ITransitionable
         {
             chatbox.gameObject.SetActive(false);
             menu.SetSelectionIndex(0);
-            playerLogic.playerUI.MenuTransition(party, menu, menu.gameObject);
+            playerLogic.playerUI.MenuTransition(this, menu);
             return;
         }
 
@@ -121,7 +263,12 @@ public class OverworldParty : MonoBehaviour, ITransitionable
             if (chatbox.IsBusy) return;
 
             chatSound.Play();
-            //to do
+            if (bag.ItemToUse == null) return;
+            else // picked a pokemon to use an item on
+            {
+                SlotToUse = slots[selectionIndex];
+                StartCoroutine(SummonConfirmationBox());
+            }
         }
     }
 

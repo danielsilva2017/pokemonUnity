@@ -13,6 +13,8 @@ public static class SceneInfo
     private static Dictionary<string, OverworldInfo> overworldInfo;
     private static PlayerInfo playerInfo;
     private static AreaBorder animatedAreaBorder;
+    private static AudioSource battleMusic;
+    private static Outcome? forcedOutcome;
 
     static SceneInfo()
     {
@@ -63,6 +65,7 @@ public static class SceneInfo
     /// </summary>
     public static void ReturnToOverworldFromBattle()
     {
+        StopBattleMusic();
         SceneManager.LoadScene(playerInfo.Scene);
     }
 
@@ -102,6 +105,31 @@ public static class SceneInfo
             OverworldKey = playerLogic.overworld.locationName,
             Scene = playerLogic.gameObject.scene.buildIndex
         };
+    }
+
+    public static void SetForcedOutcome(Outcome outcome)
+    {
+        forcedOutcome = outcome;
+    }
+
+    public static Outcome ConsumeForcedOutcome()
+    {
+        var o = forcedOutcome;
+        forcedOutcome = null;
+        return o ?? Outcome.Undecided;
+    }
+
+    public static void PlayBattleMusic(AudioSource music)
+    {
+        battleMusic = music;
+        battleMusic.Play();
+        Object.DontDestroyOnLoad(battleMusic.gameObject);
+    }
+
+    public static void StopBattleMusic()
+    {
+        battleMusic.Stop();
+        battleMusic = null;
     }
 
     public static BattleInfo GetBattleInfo()

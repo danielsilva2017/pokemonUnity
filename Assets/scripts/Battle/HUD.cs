@@ -23,6 +23,7 @@ public class HUD : MonoBehaviour
     public GameObject allyHealthBarFull;
     public GameObject enemyHealthBarFull;
     public SpriteRenderer transition;
+    public AudioSource expUpSound;
 
     private Pokemon ally;
     private Pokemon enemy;
@@ -33,7 +34,7 @@ public class HUD : MonoBehaviour
     private float lastEnemyHealthBar;
 
     private readonly float introSpeed = 0.8f;
-    private readonly float updateSpeed = 160f; // amount of frames required to fill/empty a bar
+    private readonly float updateSpeed = 120f; // amount of frames required to fill/empty a bar
     private readonly float transitionSpeed = 10f;
 
     // Start is called before the first frame update
@@ -99,18 +100,16 @@ public class HUD : MonoBehaviour
         return $"{pokemon.Name}{genderChar}";
     }
 
-    public IEnumerator IntroEffect(AudioSource music)
+    public IEnumerator IntroEffect()
     {
         HideAll();
 
         var frames = 1/introSpeed * 100;
         var introSprite = introEffect.GetComponent<SpriteRenderer>();
-        var initialVolume = music.volume;
 
         for (var i=frames; i>=0; i--)
         {
             introSprite.color = new Color(introSprite.color.r, introSprite.color.g, introSprite.color.b, i / frames);
-            music.volume = 1f - i / frames * (1f - initialVolume);
             yield return null;
         }
 
@@ -162,7 +161,9 @@ public class HUD : MonoBehaviour
     /// </summary>
     public IEnumerator UpdateAllyExp(bool immediate = false)
     {
+        expUpSound.Play();
         yield return UpdateBar(allyExpBar, ally.Experience - ally.CurLevelExp, ally.NextLevelExp - ally.CurLevelExp, lastAllyExpBar, immediate);
+        expUpSound.Stop();
         lastAllyExpBar = ((float)ally.Experience - ally.CurLevelExp) / (ally.NextLevelExp - ally.CurLevelExp);
     }
 
@@ -171,7 +172,9 @@ public class HUD : MonoBehaviour
     /// </summary>
     public IEnumerator FillAllyExpBar(bool immediate = false)
     {
+        expUpSound.Play();
         yield return UpdateBar(allyExpBar, 1, 1, lastAllyExpBar, immediate);
+        expUpSound.Stop();
         allyLevel.text = Bold(ally.Level.ToString());
         yield return null;
         lastAllyExpBar = 0f;

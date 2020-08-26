@@ -24,5 +24,5 @@ public enum ItemCategory
 
 public enum ItemUsage
 {
-    TargetsSelf, TargetsEnemy, TargetsPlayer
+    TargetsAlly, TargetsEnemy, TargetsPlayer
 }

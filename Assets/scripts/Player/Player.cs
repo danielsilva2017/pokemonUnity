@@ -18,7 +18,7 @@ public class Player
             CreatePokemon("Bulbasaur", 9),
             CreatePokemon("Snorlax", 12)
         };
-        Pokemons[0].Health -= 6;
+        
         Bag = new Bag();
     }
 
