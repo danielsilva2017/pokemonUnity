@@ -10,6 +10,7 @@ public enum ChatState
 
 public class Dialog : MonoBehaviour, IDialog
 {
+    public GameObject confirmationObject;
     public Image chatbox;
     public Text chatText;
     public Text movePoints;
@@ -22,17 +23,23 @@ public class Dialog : MonoBehaviour, IDialog
     private readonly int framesPerChar = 2;
 
     public bool IsBusy { get; set; }
+    public ConfirmationBox ConfirmationBox { get; set; }
 
     // Start is called before the first frame update
     void Start()
     {
-
+        if (confirmationObject != null) ConfirmationBox = new ConfirmationBox(confirmationObject);
     }
 
     // Update is called once per frame
     void Update()
     {
         
+    }
+
+    public void PrintSilent(string message, bool immediate = false)
+    {
+        StartCoroutine(Print(message, immediate));
     }
 
     public void RefreshMoves(Pokemon ally)

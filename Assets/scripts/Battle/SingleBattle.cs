@@ -12,17 +12,18 @@ public class SingleBattle : MonoBehaviour, IBattle
 {
     public GameObject battleCanvas;
     public GameObject partyCanvas;
+    public GameObject bagCanvas;
     public Unit playerUnit;
     public Unit enemyUnit;
     public HUD hud;
     public Dialog chatbox;
     public BattleParty party;
+    public BattleBag bag;
     public AudioSource chatSound;
     public AudioSource hitSound;
     public AudioSource notVeryEffectiveSound;
     public AudioSource superEffectiveSound;
     public AudioSource levelUpSound;
-    public SpriteRenderer transition;
 
     private int orderIndex;
     private int actionIndex;
@@ -63,8 +64,6 @@ public class SingleBattle : MonoBehaviour, IBattle
 
         // UI setup
         Application.targetFrameRate = 60;
-        partyCanvas.SetActive(false);
-        transition.gameObject.SetActive(false);
         playerUnit.Setup(Logic.ActiveAllies[0]);
         enemyUnit.Setup(Logic.ActiveEnemies[0]);
         hud.Init(playerUnit.Pokemon, enemyUnit.Pokemon);
@@ -187,7 +186,11 @@ public class SingleBattle : MonoBehaviour, IBattle
                     chatSound.Play();
                     if (index < dialogue.Length) yield return Print(dialogue[index], false);
                     else if (index == dialogue.Length) yield return Print($"{PlayerInfo.Player.Name} got {BattleInfo.Trainer.money}€ for winning!", false);
-                    else StartCoroutine(ReturnToOverworld());
+                    else
+                    {
+                        BattleState = BattleState.Idle;
+                        StartCoroutine(hud.ReturnToOverworld());
+                    }
                     index++;
                 }
                 else yield return null;
@@ -195,7 +198,8 @@ public class SingleBattle : MonoBehaviour, IBattle
         }
         else
         {
-            StartCoroutine(ReturnToOverworld());
+            BattleState = BattleState.Idle;
+            StartCoroutine(hud.ReturnToOverworld());
         }
     }
 
@@ -228,7 +232,8 @@ public class SingleBattle : MonoBehaviour, IBattle
                         yield return Print($"{PlayerInfo.Player.Name} blacked out!", false);
                         break;
                     case 3:
-                        StartCoroutine(ReturnToOverworld());
+                        BattleState = BattleState.Idle;
+                        StartCoroutine(hud.ReturnToOverworld());
                         break;
                 }
             }
@@ -244,7 +249,8 @@ public class SingleBattle : MonoBehaviour, IBattle
         {
             if (Input.GetKeyDown(KeyCode.Z))
             {
-                StartCoroutine(ReturnToOverworld());
+                BattleState = BattleState.Idle;
+                StartCoroutine(hud.ReturnToOverworld());
                 break;
             }
             else yield return null;
@@ -274,21 +280,13 @@ public class SingleBattle : MonoBehaviour, IBattle
                         yield return Print("<pokedex data here soon>", false);
                         break;
                     case 2:
-                        StartCoroutine(ReturnToOverworld());
+                        BattleState = BattleState.Idle;
+                        StartCoroutine(hud.ReturnToOverworld());
                         break;
                 }
             }
             else yield return null;
         }
-    }
-
-    private IEnumerator ReturnToOverworld()
-    {
-        BattleState = BattleState.Idle;
-        transition.gameObject.SetActive(true);
-        MakeInvisible(transition);
-        yield return FadeIn(transition, 20);
-        SceneInfo.ReturnToOverworldFromBattle();
     }
 
     public IEnumerator NotifyUpdateHealth(bool immediate = false)
@@ -322,6 +320,45 @@ public class SingleBattle : MonoBehaviour, IBattle
 
         // switch instead of using a move
         AddSwitchCommand(selection);
+    }
+    
+    public void NotifyItemUsed(Item item)
+    {
+        if (item == null) // cancelled
+            BeginPlayerAction();
+        else if (item.Usage == ItemUsage.TargetsAlly) // already used, done
+            AddEmptyCommand();
+        else // going to use
+            StartCoroutine(UseItemOnEnemy(item));
+    }
+
+    private IEnumerator UseItemOnEnemy(Item item)
+    {
+        chatbox.SetState(ChatState.ChatOnly);
+        bag.chatbox.confirmationObject.SetActive(false);
+        var target = Logic.ActiveEnemies[0]; // for now, can only use enemy-targeting items in 1v1
+
+        if (!bag.ItemToUse.Functions.CanBeUsed(bag.ItemToUse, target))
+        {
+            yield return chatbox.Print($"This item can't be used on {target.Name} right now.");
+            while (!Input.GetKeyDown(KeyCode.Z)) yield return null;
+            bag.Init(this); // back to bag
+            yield break;
+        }
+
+        yield return hud.FadeInTransition();
+        bagCanvas.SetActive(false);
+        battleCanvas.SetActive(true);
+        yield return hud.FadeOutTransition();
+        
+        PlayerInfo.Player.Bag.TakeItem(bag.ItemToUse, bag.ItemToUseIndex, 1);
+        yield return bag.ItemToUse.Functions.Use(bag.ItemToUse, target, chatbox);
+        yield return NotifyUpdateHealth();
+        yield return bag.ItemToUse.Functions.OnUse(bag.ItemToUse, target, chatbox);
+
+        //while (!Input.GetKeyDown(KeyCode.Z)) yield return null;
+
+        AddEmptyCommand();
     }
 
     /// <summary>
@@ -360,7 +397,7 @@ public class SingleBattle : MonoBehaviour, IBattle
     /// <summary>
     /// This Pokemon will use an item.
     /// </summary>
-    public void AddItemCommand(Item item)
+   /* public void AddItemCommand(Item item)
     {
         itemQueue.Add(new ItemCommand(item, order[orderIndex]));
         moveQueue.Add(null);
@@ -374,6 +411,13 @@ public class SingleBattle : MonoBehaviour, IBattle
     public void AddItemCommand(Item item, Pokemon target)
     {
         itemQueue.Add(new ItemCommand(item, target));
+        moveQueue.Add(null);
+        switchQueue.Add(null);
+        MoveToNextInOrder();
+    }*/
+
+    public void AddEmptyCommand()
+    {
         moveQueue.Add(null);
         switchQueue.Add(null);
         MoveToNextInOrder();
@@ -429,17 +473,27 @@ public class SingleBattle : MonoBehaviour, IBattle
     {
         chatbox.SetState(ChatState.ChatOnly);
         BattleState = BattleState.TurnHappening;
-        StartCoroutine(Logic.Turn(moveQueue, switchQueue, itemQueue));
+        StartCoroutine(Logic.Turn(moveQueue, switchQueue));
     }
 
     private IEnumerator BeginSwitch()
     {
         BattleState = BattleState.Idle;
-        yield return hud.FadeOut();
+        yield return hud.FadeInTransition();
         battleCanvas.SetActive(false);
         partyCanvas.SetActive(true);
         party.Init(this, isForcedSwitch);
-        yield return hud.FadeIn();
+        yield return hud.FadeOutTransition();
+    }
+
+    private IEnumerator BeginOpenBag()
+    {
+        BattleState = BattleState.Idle;
+        yield return hud.FadeInTransition();
+        battleCanvas.SetActive(false);
+        bagCanvas.SetActive(true);
+        bag.Init(this);
+        yield return hud.FadeOutTransition();
     }
 
     /// <summary>
@@ -503,14 +557,16 @@ public class SingleBattle : MonoBehaviour, IBattle
                     break;
                 case 1:
                     chatSound.Play();
-                    var sk = Resources.Load<ItemBase>("Items/Pokeball");
-                    AddItemCommand(new Item(sk), enemyUnit.Pokemon); //hardcoded throw pokeball
+                    StartCoroutine(BeginOpenBag());
                     break;
                 case 2:
                     isForcedSwitch = false;
                     StartCoroutine(BeginSwitch());
                     break;
-                case 3: break;
+                case 3:
+                    Logic.TryEscape();
+                    AddEmptyCommand();
+                    break;
             }
         }
     }

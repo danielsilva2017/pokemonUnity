@@ -35,7 +35,7 @@ public class HUD : MonoBehaviour
 
     private readonly float introSpeed = 0.8f;
     private readonly float updateSpeed = 120f; // amount of frames required to fill/empty a bar
-    private readonly float transitionSpeed = 10f;
+    //private readonly float transitionSpeed = 10f;
 
     // Start is called before the first frame update
     void Start()
@@ -45,7 +45,7 @@ public class HUD : MonoBehaviour
 
     public void Init(Pokemon ally, Pokemon enemy)
     {
-        transition.enabled = false;
+        transition.gameObject.SetActive(false);
         InitAlly(ally);
         InitEnemy(enemy);
     }
@@ -238,32 +238,26 @@ public class HUD : MonoBehaviour
         statusHUD.sprite = statuses[(int) pokemon.Status];
     }
 
-    public IEnumerator FadeOut()
+    public IEnumerator ReturnToOverworld()
     {
-        transition.enabled = true;
-        var frames = 1 / transitionSpeed * 100;
-
-        for (var i = 0; i <= frames; i++)
-        {
-            transition.color = new Color(transition.color.r, transition.color.g, transition.color.b, i / frames);
-            yield return null;
-        }
-
-        transition.enabled = false;
+        transition.gameObject.SetActive(true);
+        MakeInvisible(transition);
+        yield return FadeIn(transition, 20);
+        SceneInfo.ReturnToOverworldFromBattle();
     }
 
-    public IEnumerator FadeIn()
+    public IEnumerator FadeInTransition()
     {
-        transition.enabled = true;
-        var frames = 1 / transitionSpeed * 100;
+        transition.gameObject.SetActive(true);
+        yield return FadeIn(transition, 10);
+        transition.gameObject.SetActive(false);
+    }
 
-        for (var i = frames; i >= 0; i--)
-        {
-            transition.color = new Color(transition.color.r, transition.color.g, transition.color.b, i / frames);
-            yield return null;
-        }
-
-        transition.enabled = false;
+    public IEnumerator FadeOutTransition()
+    {
+        transition.gameObject.SetActive(true);
+        yield return FadeOut(transition, 10);
+        transition.gameObject.SetActive(false);
     }
 
     private void ShowAll()

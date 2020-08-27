@@ -22,6 +22,10 @@ public interface IBattle
     /// </summary>
     void NotifyTurnFinished();
     /// <summary>
+    /// Notifies the UI that an item was used.
+    /// </summary>
+    void NotifyItemUsed(Item item);
+    /// <summary>
     /// Notifies the UI that a switch was performed.
     /// </summary>
     void NotifySwitchPerformed(Pokemon selection);

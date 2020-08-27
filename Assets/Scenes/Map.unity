@@ -19979,7 +19979,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!82 &1535934861
 AudioSource:
   m_ObjectHideFlags: 0
@@ -40604,7 +40604,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cf9bd1e048bf2c43a6be1f021a27c34, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  skeleton: {fileID: 11400000, guid: 1371e2743d784ee4aad9aad2becb58e1, type: 2}
+  skeleton: {fileID: 11400000, guid: ebb1029a355232e4e9786e5ff9bd62b3, type: 2}
   chatbox: {fileID: 305174665}
   collectedSound: {fileID: 1849376047}
 --- !u!95 &2114068150

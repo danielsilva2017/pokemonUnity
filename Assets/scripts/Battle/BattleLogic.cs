@@ -136,6 +136,11 @@ public class BattleLogic
         return EffectExists(new Effect(logic), user, null);
     }
 
+    public void TryEscape() //todo
+    {
+        SceneInfo.SetForcedOutcome(Outcome.Escaped);
+    }
+
     /// <summary>
     /// Immediately switches out a Pokemon, doing so outside of the turn loop.
     /// </summary>
@@ -188,9 +193,8 @@ public class BattleLogic
     /// </summary>
     /// <param name="moveQueue"> Queue of move commands, which can have null entries. </param>
     /// <param name="switchQueue"> Queue of switch commands, which can have null entries. </param>
-    /// <param name="itemQueue"> Queue of switch commands, which can have null entries. </param>
     /// <returns></returns>
-    public IEnumerator Turn(List<MoveCommand> moveQueue, List<SwitchCommand> switchQueue, List<ItemCommand> itemQueue)
+    public IEnumerator Turn(List<MoveCommand> moveQueue, List<SwitchCommand> switchQueue)
     {
         if (Weather != Weather.None) yield return Print(WeatherToString());
 
@@ -231,7 +235,7 @@ public class BattleLogic
 
             if (switchQueue[i] != null)
                 yield return SwitchPokemon(switchQueue[i], order);
-            else if (itemQueue[i] != null)
+            /*else if (itemQueue[i] != null)
             {
                 var item = itemQueue[i].Item;
                 var target = itemQueue[i].Target;
@@ -244,7 +248,7 @@ public class BattleLogic
                 yield return battleUI.NotifyUpdateHealth();
                 yield return item.Functions.OnUse(item, itemQueue[i].Target, battleUI.Chatbox);
                 yield return battleUI.NotifyUpdateHealth();
-            }
+            }*/
         }
 
         // possible early exit (already won/lost)

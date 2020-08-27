@@ -196,8 +196,7 @@ public class OverworldBag : MonoBehaviour, ITransitionable
                 ItemToUse = item;
                 ItemToUseIndex = itemIndex;
                 StartCoroutine(SummonConfirmationBox());
-            }
-                
+            } 
         }
     }
 
