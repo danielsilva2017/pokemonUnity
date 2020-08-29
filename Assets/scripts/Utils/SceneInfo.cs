@@ -129,6 +129,7 @@ public static class SceneInfo
     public static void StopBattleMusic()
     {
         battleMusic.Stop();
+        Object.Destroy(battleMusic.gameObject);
         battleMusic = null;
     }
 

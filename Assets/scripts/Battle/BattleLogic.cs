@@ -60,10 +60,12 @@ public class BattleLogic
     public List<Pokemon> ActiveEnemies { get; set; }
     public Weather Weather { get; set; }
     public Outcome Outcome { get; set; }
+    public BattleAnimations Animations { get; set; }
 
-    public BattleLogic(IBattle battle, BattleInfo info)
+    public BattleLogic(IBattle battle, BattleInfo info, BattleAnimations anims)
     {
         battleUI = battle;
+        Animations = anims;
         BattleSize = info.BattleSize;
         ActiveAllies = info.Allies.GetRange(0, info.BattleSize);
         PartyAllies = info.Allies.GetRange(info.BattleSize, info.Allies.Count - info.BattleSize);
@@ -537,6 +539,7 @@ public class BattleLogic
             {
                 yield return battleUI.NotifyUpdateHealth();
                 yield return Print($"{user.Name} fainted!");
+                yield return Animations.Faint(user);
                 user.Status = Status.Fainted;
 
                 // apply effects (on death)

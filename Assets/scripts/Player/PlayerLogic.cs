@@ -34,7 +34,7 @@ public class PlayerLogic : MonoBehaviour
 
     public Direction Direction { get; set; }
     public Player Player { get; set; }
-
+    public ItemBase b;
     void Start()
     {
         Application.targetFrameRate = 60;
@@ -53,7 +53,7 @@ public class PlayerLogic : MonoBehaviour
             overworld = GameObject.Find(playerInfo.OverworldKey).GetComponent<Overworld>();
             SceneInfo.DeletePlayerInfo();
         }
-
+        Player.Bag.AddItem(new Item(b), 20);
         overworld.locationMusic.Play();
         isInteractionFinished = true;
         StartCoroutine(PlayEnterSceneTransition());

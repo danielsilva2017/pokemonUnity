@@ -16,6 +16,7 @@ public class SingleBattle : MonoBehaviour, IBattle
     public Unit playerUnit;
     public Unit enemyUnit;
     public HUD hud;
+    public BattleAnimations anims;
     public Dialog chatbox;
     public BattleParty party;
     public BattleBag bag;
@@ -56,7 +57,7 @@ public class SingleBattle : MonoBehaviour, IBattle
 
         // Logic setup
         EnsureAllLeadingPokemonAlive(BattleInfo);
-        Logic = new BattleLogic(this, BattleInfo);
+        Logic = new BattleLogic(this, BattleInfo, anims);
         moveQueue = new List<MoveCommand>();
         switchQueue = new List<SwitchCommand>();
         itemQueue = new List<ItemCommand>();
@@ -352,9 +353,9 @@ public class SingleBattle : MonoBehaviour, IBattle
         yield return hud.FadeOutTransition();
         
         PlayerInfo.Player.Bag.TakeItem(bag.ItemToUse, bag.ItemToUseIndex, 1);
-        yield return bag.ItemToUse.Functions.Use(bag.ItemToUse, target, chatbox);
+        yield return bag.ItemToUse.Functions.Use(bag.ItemToUse, target, chatbox, anims);
         yield return NotifyUpdateHealth();
-        yield return bag.ItemToUse.Functions.OnUse(bag.ItemToUse, target, chatbox);
+        yield return bag.ItemToUse.Functions.OnUse(bag.ItemToUse, target, chatbox, anims);
 
         //while (!Input.GetKeyDown(KeyCode.Z)) yield return null;
 

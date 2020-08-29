@@ -14,13 +14,13 @@ public abstract class ItemFunctions
     /// </summary>
     public virtual bool CanBeUsed(Item item, Pokemon target) { return true; }
     /// <summary>
-    /// (Optional) Use an item on a Pokemon (e.g. potion).
+    /// (Optional) Use an item on a Pokemon (e.g. potion). BattleAnimations can be null.
     /// </summary>
-    public virtual IEnumerator Use(Item item, Pokemon target, IDialog chatbox) { yield break; }
+    public virtual IEnumerator Use(Item item, Pokemon target, IDialog chatbox, BattleAnimations anims) { yield break; }
     /// <summary>
-    /// (Optional) On item used on a Pokemon (e.g. potion).
+    /// (Optional) On item used on a Pokemon (e.g. potion). BattleAnimations can be null.
     /// </summary>
-    public virtual IEnumerator OnUse(Item item, Pokemon target, IDialog chatbox) { yield break; }
+    public virtual IEnumerator OnUse(Item item, Pokemon target, IDialog chatbox, BattleAnimations anims) { yield break; }
     /// <summary>
     /// (Optional) Can the item be used on the player right now?
     /// </summary>
@@ -53,16 +53,24 @@ public class PokeBall : ItemFunctions
         return !target.IsAlly;
     }
 
-    public override IEnumerator Use(Item item, Pokemon target, IDialog chatbox)
+    public override IEnumerator Use(Item item, Pokemon target, IDialog chatbox, BattleAnimations anims)
     {
+        yield return anims.ThrowPokeball(item.Logic, target);
+        yield return new WaitForSeconds(0.5f);
+
         var checkChance = GetCatchChance(target, catchMultiplier);
 
         for (var i = 1; i <= 4; i++)
         {
-            if (Chance(checkChance)) yield return chatbox.Print($"<check {i}/4>");
+            if (Chance(checkChance) && i < 4)
+            {
+                yield return anims.ShakePokeball();
+                yield return new WaitForSeconds(0.5f);
+            }
             else
             {
                 success = false;
+                yield return anims.FailPokeball(item.Logic, target);
                 yield break;
             }
         }
@@ -70,7 +78,7 @@ public class PokeBall : ItemFunctions
         success = true;
     }
 
-    public override IEnumerator OnUse(Item item, Pokemon target, IDialog chatbox)
+    public override IEnumerator OnUse(Item item, Pokemon target, IDialog chatbox, BattleAnimations anims)
     {
         if (success) SceneInfo.SetForcedOutcome(Outcome.Caught);
         else yield return chatbox.Print("Oh no! It broke free!");
@@ -91,11 +99,15 @@ public class MasterBall : PokeBall
 {
     public MasterBall() { success = true; }
 
-    public override IEnumerator Use(Item item, Pokemon target, IDialog chatbox)
+    public override IEnumerator Use(Item item, Pokemon target, IDialog chatbox, BattleAnimations anims)
     {
-        for (var i = 1; i <= 4; i++)
+        yield return anims.ThrowPokeball(item.Logic, target);
+        yield return new WaitForSeconds(0.5f);
+
+        for (var i = 1; i <= 3; i++)
         {
-            yield return chatbox.Print($"<check {i}/4>");
+            yield return anims.ShakePokeball();
+            yield return new WaitForSeconds(0.5f);
         }
     }
 }
@@ -110,14 +122,14 @@ public class Potion : ItemFunctions
         return target.Status != Status.Fainted && target.Health < target.MaxHealth;
     }
 
-    public override IEnumerator Use(Item item, Pokemon target, IDialog chatbox)
+    public override IEnumerator Use(Item item, Pokemon target, IDialog chatbox, BattleAnimations anims)
     {
         healed = Math.Min(heal, target.MaxHealth - target.Health);
         target.Health += healed;
         yield break;
     }
 
-    public override IEnumerator OnUse(Item item, Pokemon target, IDialog chatbox)
+    public override IEnumerator OnUse(Item item, Pokemon target, IDialog chatbox, BattleAnimations anims)
     {
         yield return chatbox.Print($"{target.Name} recovered {healed} health!");
     }
@@ -152,7 +164,7 @@ public class Revive : ItemFunctions
         return target.Status == Status.Fainted;
     }
 
-    public override IEnumerator Use(Item item, Pokemon target, IDialog chatbox)
+    public override IEnumerator Use(Item item, Pokemon target, IDialog chatbox, BattleAnimations anims)
     {
         target.Status = Status.None;
         healed = target.MaxHealth / 2;
@@ -160,7 +172,7 @@ public class Revive : ItemFunctions
         yield break;
     }
 
-    public override IEnumerator OnUse(Item item, Pokemon target, IDialog chatbox)
+    public override IEnumerator OnUse(Item item, Pokemon target, IDialog chatbox, BattleAnimations anims)
     {
         yield return chatbox.Print($"{target.Name} recovered {healed} health!");
     }

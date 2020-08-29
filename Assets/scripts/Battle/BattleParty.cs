@@ -220,9 +220,9 @@ public class BattleParty : MonoBehaviour
         else
         {
             Battle.PlayerInfo.Player.Bag.TakeItem(bag.ItemToUse, bag.ItemToUseIndex, 1);
-            yield return bag.ItemToUse.Functions.Use(bag.ItemToUse, SlotToUse.Pokemon, chatbox);
+            yield return bag.ItemToUse.Functions.Use(bag.ItemToUse, SlotToUse.Pokemon, chatbox, null);
             yield return UpdateSlot(SlotToUse);
-            yield return bag.ItemToUse.Functions.OnUse(bag.ItemToUse, SlotToUse.Pokemon, chatbox);
+            yield return bag.ItemToUse.Functions.OnUse(bag.ItemToUse, SlotToUse.Pokemon, chatbox, null);
         }
 
         while (!Input.GetKeyDown(KeyCode.Z)) yield return null;

@@ -7,16 +7,20 @@ public class Unit : MonoBehaviour
 {
     public GameObject animatable;
 
-    private Animator animator;
-
+    public Animator Animator { get; set; }
+    public SpriteRenderer Renderer { get; set; }
+    public RectTransform RectTransform { get; set; }
     public Pokemon Pokemon { get; set; }
 
     public void Setup(Pokemon pokemon)
     {
         Pokemon = pokemon;
-        animator = animatable.GetComponent<Animator>();
+        Animator = animatable.GetComponent<Animator>();
+        Renderer = animatable.GetComponent<SpriteRenderer>();
+        RectTransform = animatable.GetComponent<RectTransform>();
 
-        animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(GetAnimationPath());
+        Animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>(GetAnimationPath());
+        Renderer.color = new Color(Renderer.color.r, Renderer.color.g, Renderer.color.b, 1f);
     }
 
     private string GetAnimationPath()
