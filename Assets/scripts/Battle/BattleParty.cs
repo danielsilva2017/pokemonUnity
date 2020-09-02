@@ -134,8 +134,10 @@ public class BattleParty : MonoBehaviour
         yield return hud.FadeInTransition();
         partyCanvas.SetActive(false);
         battleCanvas.SetActive(true);
+        Battle.SwitchUpdateUI(selection);
+        hud.NotifySwitch(selection);
         yield return hud.FadeOutTransition();
-        Battle.NotifySwitchPerformed(selection);
+        yield return Battle.NotifySwitchPerformed(selection);
     }
 
     private IEnumerator EndItemUsage()

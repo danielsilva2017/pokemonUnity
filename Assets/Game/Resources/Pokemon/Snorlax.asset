@@ -27,6 +27,7 @@ MonoBehaviour:
   catchRate: 25
   expStat: 189
   maleChance: 87.5
+  cry: {fileID: 8300000, guid: 40c06760cab84b8469c3b4c1dbf2b3a1, type: 3}
   learnableAbilities:
   - {fileID: 11400000, guid: ed31c51450bda3a43b09acba758aebfb, type: 2}
   learnableMoves:

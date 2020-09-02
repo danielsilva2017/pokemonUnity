@@ -56,9 +56,27 @@ public class PlayerUI : MonoBehaviour
         transition.gameObject.SetActive(false);
     }
 
+    public IEnumerator TrainerBattleTransition(PlayerLogic playerLogic, AudioClip music)
+    {
+        playerLogic.battleMusicPlayer.clip = music;
+        SceneInfo.PlayBattleMusic(playerLogic.battleMusicPlayer);
+        yield return BattleTransition();
+    }
+
+    public void PlayMusicImmediate(PlayerLogic playerLogic, AudioClip music)
+    {
+        playerLogic.battleMusicPlayer.clip = music;
+        SceneInfo.PlayMusicImmediate(playerLogic.battleMusicPlayer);
+    }
+
     public IEnumerator WildBattleTransition()
     {
         SceneInfo.PlayBattleMusic(wildBattleMusic);
+        yield return BattleTransition();
+    }
+
+    private IEnumerator BattleTransition()
+    {
         introEffect.gameObject.SetActive(true);
         MakeInvisible(introEffect);
         introEffect.transform.position = transform.position;

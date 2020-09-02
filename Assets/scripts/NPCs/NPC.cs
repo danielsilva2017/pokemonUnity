@@ -6,9 +6,8 @@ public abstract class NPC : MonoBehaviour
 {
     public OverworldDialog chatbox;
 
-    protected string Name { get; set; }
-    protected string Class { get; set; }
-    protected PlayerLogic PlayerLogic { get; set; }
+    public string Name { get; set; }
+    protected PlayerLogic PlayerLogic { get; private set; }
     protected bool IsInteracting { get; set; }
     protected string[] Dialogue { get; set; }
     protected string[] PostDialogue { get; set; }
@@ -17,6 +16,7 @@ public abstract class NPC : MonoBehaviour
     private int dialogueIndex;
 
     public bool IsDefeated { get; set; }
+    public bool IsBusy { get; set; }
 
     // Start is called before the first frame update
     void Start()
@@ -27,23 +27,24 @@ public abstract class NPC : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (!IsInteracting) return;
+        if (!IsInteracting || IsBusy) return;
 
         if (Input.GetKeyDown(KeyCode.Z))
         {
-
             // drop input
             if (chatbox.IsBusy) return;
 
             if ((next = NextDialogue()) != null)
+            {
                 chatbox.PrintWithSound(next);
+            } 
             else
             {
+                chatbox.Hide();
                 IsInteracting = false;
                 dialogueIndex = 0;
-                PlayerLogic.EndInteraction();
-                chatbox.Hide();
-                if (!IsDefeated) DoAction();
+                if (!IsDefeated) StartCoroutine(ActionRunner());
+                else PlayerLogic.EndInteraction();
             }
         }
     }
@@ -57,10 +58,21 @@ public abstract class NPC : MonoBehaviour
     public void Interact(PlayerLogic playerLogic)
     {
         PlayerLogic = playerLogic;
+        OnInteractionStart();
         chatbox.Show();
         chatbox.PrintWithSound(NextDialogue());
         IsInteracting = true;
     }
 
-    protected abstract void DoAction();
+    private IEnumerator ActionRunner()
+    {
+        IsBusy = true;
+        yield return DoAction();
+        IsBusy = false;
+        PlayerLogic.EndInteraction();
+    }
+
+    protected abstract void OnInteractionStart();
+
+    protected abstract IEnumerator DoAction();
 }

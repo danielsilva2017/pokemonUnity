@@ -15,8 +15,7 @@ public class TrainerPokemonInit
 public class Trainer : NPC
 {
     public string trainerName;
-    public string trainerClass;
-    public AudioSource music;
+    public TrainerBase skeleton;
     [TextArea] public string[] dialogue;
     [TextArea] public string[] defeatDialogue;
     [TextArea] public string[] postDialogue;
@@ -30,7 +29,6 @@ public class Trainer : NPC
     void Start()
     {
         Name = trainerName;
-        Class = trainerClass;
         Dialogue = dialogue;
         PostDialogue = postDialogue;
         party = new List<Pokemon>(pokemons.Length);
@@ -39,8 +37,19 @@ public class Trainer : NPC
             party.Add(CreatePokemon(init.speciesName, init.level));
     }
 
-    protected override void DoAction()
+    protected override void OnInteractionStart()
     {
+        if (!IsDefeated)
+        {
+            PlayerLogic.overworld.locationMusic.Stop();
+            PlayerLogic.Animator.speed = 0;
+            PlayerLogic.playerUI.PlayMusicImmediate(PlayerLogic, skeleton.introMusic);
+        }
+    }
+
+    protected override IEnumerator DoAction()
+    {
+        yield return PlayerLogic.playerUI.TrainerBattleTransition(PlayerLogic, skeleton.battleMusic);
         SceneInfo.BeginTrainerBattle(PlayerLogic, this, party, 1, weather);
     }
 }

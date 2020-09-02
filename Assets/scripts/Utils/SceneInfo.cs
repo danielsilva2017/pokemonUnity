@@ -119,15 +119,25 @@ public static class SceneInfo
         return o ?? Outcome.Undecided;
     }
 
+    public static void PlayMusicImmediate(AudioSource music)
+    {
+        battleMusic = music;
+        battleMusic.volume = 0.6f;
+        battleMusic.Play();
+    }
+
     public static void PlayBattleMusic(AudioSource music)
     {
         battleMusic = music;
+        battleMusic.volume = 0.4f;
         battleMusic.Play();
         Object.DontDestroyOnLoad(battleMusic.gameObject);
     }
 
     public static void StopBattleMusic()
     {
+        if (battleMusic == null) return;
+
         battleMusic.Stop();
         Object.Destroy(battleMusic.gameObject);
         battleMusic = null;

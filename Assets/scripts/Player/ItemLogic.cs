@@ -80,8 +80,16 @@ public class PokeBall : ItemFunctions
 
     public override IEnumerator OnUse(Item item, Pokemon target, IDialog chatbox, BattleAnimations anims)
     {
-        if (success) SceneInfo.SetForcedOutcome(Outcome.Caught);
-        else yield return chatbox.Print("Oh no! It broke free!");
+        if (success)
+        {
+            target.Pokeball = item.Logic;
+            SceneInfo.SetForcedOutcome(Outcome.Caught);
+        }
+        else
+        {
+            yield return chatbox.Print("Oh no! It broke free!");
+            yield return new WaitForSeconds(1f);
+        }
     }
 }
 

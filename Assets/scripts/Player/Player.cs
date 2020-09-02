@@ -15,10 +15,10 @@ public class Player
         Name = "the boss man";
         Pokemons = new List<Pokemon>()
         {
-            CreatePokemon("Bulbasaur", 9),
+            CreatePokemon("Bulbasaur", 14),
             CreatePokemon("Snorlax", 12)
         };
-        Pokemons[1].Health = 6;
+        Pokemons[1].Health = 44;
         Bag = new Bag();
     }
 

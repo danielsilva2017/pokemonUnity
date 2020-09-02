@@ -146,14 +146,14 @@ public class BattleLogic
     /// <summary>
     /// Immediately switches out a Pokemon, doing so outside of the turn loop.
     /// </summary>
-    public void SwitchPokemonImmediate(Pokemon switchedOut, Pokemon switchedIn)
+    public IEnumerator SwitchPokemonImmediate(Pokemon switchedOut, Pokemon switchedIn)
     {
         // swap spots between field and party
         var activeList = switchedIn.IsAlly ? ActiveAllies : ActiveEnemies;
         var partyList = switchedIn.IsAlly ? PartyAllies : PartyEnemies;
         activeList[activeList.FindIndex(pkmn => pkmn == switchedOut)] = switchedIn;
         partyList[partyList.FindIndex(pkmn => pkmn == switchedIn)] = switchedOut;
-        battleUI.RegisterSwitch(switchedIn);
+        yield return battleUI.RegisterSwitch(switchedIn);
         switchedIn.WasForcedSwitch = true;
 
         // update exp candidates - new ally gets xp for all active enemies
@@ -427,7 +427,7 @@ public class BattleLogic
         activeList[activeList.FindIndex(pkmn => pkmn == cmd.SwitchedOut)] = cmd.SwitchedIn;
         partyList[partyList.FindIndex(pkmn => pkmn == cmd.SwitchedIn)] = cmd.SwitchedOut;
         order[order.FindIndex(pkmn => pkmn == cmd.SwitchedOut)] = cmd.SwitchedIn;
-        battleUI.RegisterSwitch(cmd.SwitchedIn);
+        yield return battleUI.RegisterSwitch(cmd.SwitchedIn);
 
         // update exp candidates - new ally gets xp for all active enemies
         if (cmd.SwitchedIn.IsAlly)
@@ -538,6 +538,7 @@ public class BattleLogic
             if (user.Health <= 0 && user.Status != Status.Fainted)
             {
                 yield return battleUI.NotifyUpdateHealth();
+                Animations.GetUnit(user).PlayFaintCry();
                 yield return Print($"{user.Name} fainted!");
                 yield return Animations.Faint(user);
                 user.Status = Status.Fainted;

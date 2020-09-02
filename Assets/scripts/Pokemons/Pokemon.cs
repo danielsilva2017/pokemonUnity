@@ -15,6 +15,7 @@ public class Pokemon : IComparable<Pokemon>
     public Move[] Moves { get; set; }
     public Gender Gender { get; set; }
     public Status Status { get; set; }
+    public ItemLogic Pokeball { get; set; } // type of pokeball caught with
     public bool CanAttack { get; set; }
     public bool WasForcedSwitch { get; set; } // whether it joined the fight as the result of a forced switch
     public List<Pokemon> ExpCandidates { get; set; } // those who will get xp if this pokemon dies
@@ -55,6 +56,7 @@ public class Pokemon : IComparable<Pokemon>
         Health = MaxHealth;
         Status = status;
         CanAttack = canAttack;
+        Pokeball = ItemLogic.PokeBall;
 
         Moves = new Move[4];
         int moveIndex = 0;
@@ -67,6 +69,8 @@ public class Pokemon : IComparable<Pokemon>
             }
         }
     }
+
+    
 
     public void LevelUp()
     {

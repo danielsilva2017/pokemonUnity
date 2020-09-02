@@ -11,5 +11,7 @@ public class Chatter : NPC
         Dialogue = dialogue;
     }
 
-    protected override void DoAction() { }
+    protected override void OnInteractionStart() { }
+
+    protected override IEnumerator DoAction() { yield break; }
 }

@@ -7,6 +7,7 @@ using static Utils;
 
 public class HUD : MonoBehaviour
 {
+    public BattleAnimations anims;
     public GameObject introEffect;
     public Text allyName;
     public Text allyLevel;
@@ -102,7 +103,7 @@ public class HUD : MonoBehaviour
 
     public IEnumerator IntroEffect()
     {
-        HideAll();
+        HideAllyHUD(); HideEnemyHUD();
 
         var frames = 1/introSpeed * 100;
         var introSprite = introEffect.GetComponent<SpriteRenderer>();
@@ -114,22 +115,21 @@ public class HUD : MonoBehaviour
         }
 
         Destroy(introEffect);
-
-        ShowAll();
     }
 
-    private IEnumerator UpdateBar(GameObject bar, int value, int max, float lastValue, bool immediate = false)
+    private IEnumerator UpdateBar(GameObject bar, int value, int max, float lastValue, bool immediate = false, bool displayDamageAnim = false)
     {
         if (immediate)
         {
             bar.transform.localScale = new Vector3(((float)value) / max, 1f, bar.transform.localScale.z);
             yield break;
         }
-        
+
         var diff = ((float)value / max) - lastValue; // scale.x diff
         // stop when there's nothing to update - consider fp inaccuracies
         if (Math.Abs(diff) <= 0.0001f) yield break;
 
+        if (displayDamageAnim) StartCoroutine(anims.TakeDamage(enemy));
         var frames = Math.Abs(diff) * updateSpeed;
 
         for (var i = 0; i <= frames; i++)
@@ -152,8 +152,9 @@ public class HUD : MonoBehaviour
     /// </summary>
     public IEnumerator UpdateEnemyHealth(bool immediate = false)
     {
-        yield return UpdateBar(enemyHealthBar, enemy.Health, enemy.MaxHealth, lastEnemyHealthBar, immediate);
+        yield return UpdateBar(enemyHealthBar, enemy.Health, enemy.MaxHealth, lastEnemyHealthBar, immediate, true);
         lastEnemyHealthBar = ((float)enemy.Health) / enemy.MaxHealth;
+        anims.UpdatePokemonAnimationSpeed(enemy);
     }
 
     /// <summary>
@@ -163,6 +164,7 @@ public class HUD : MonoBehaviour
     {
         expUpSound.Play();
         yield return UpdateBar(allyExpBar, ally.Experience - ally.CurLevelExp, ally.NextLevelExp - ally.CurLevelExp, lastAllyExpBar, immediate);
+        if (!immediate) { for (var i = 0; i < 10; i++) yield return null; } // stall for extra sound duration
         expUpSound.Stop();
         lastAllyExpBar = ((float)ally.Experience - ally.CurLevelExp) / (ally.NextLevelExp - ally.CurLevelExp);
     }
@@ -191,13 +193,15 @@ public class HUD : MonoBehaviour
             lastAllyHealth = ally.Health;
             allyHealthBar.transform.localScale = new Vector3(((float)ally.Health) / ally.MaxHealth, 1f, allyHealthBar.transform.localScale.z);
             lastAllyHealthBar = ((float)ally.Health) / ally.MaxHealth;
+            anims.UpdatePokemonAnimationSpeed(ally);
             yield break;
         }
 
         var numdiff = ally.Health - lastAllyHealth;
         // stop when there's nothing to update - consider fp inaccuracies
         if (Math.Abs(numdiff) <= 0.0001f) yield break;
-        
+
+        StartCoroutine(anims.TakeDamage(ally));
         var ratio = ((float)ally.Health) / ally.MaxHealth;
         var bardiff = ratio - lastAllyHealthBar; // scale.x diff
         var frames = Math.Abs(bardiff) * updateSpeed;
@@ -215,6 +219,7 @@ public class HUD : MonoBehaviour
 
         lastAllyHealth = ally.Health;
         lastAllyHealthBar = ratio;
+        anims.UpdatePokemonAnimationSpeed(ally);
     }
 
     /// <summary>
@@ -260,35 +265,47 @@ public class HUD : MonoBehaviour
         transition.gameObject.SetActive(false);
     }
 
-    private void ShowAll()
+    public void ShowAllyHUD()
     {
         allyName.enabled = true;
         allyLevel.enabled = true;
         allyHealth.enabled = true;
-        enemyName.enabled = true;
-        enemyLevel.enabled = true;
         allyHUD.enabled = true;
-        enemyHUD.enabled = true;
+        allyStatus.enabled = true;
         allyHealthBar.SetActive(true);
         allyExpBar.SetActive(true);
-        enemyHealthBar.SetActive(true);
         allyHealthBarFull.SetActive(true);
+    }
+
+    public void ShowEnemyHUD()
+    {
+        enemyName.enabled = true;
+        enemyLevel.enabled = true;
+        enemyHUD.enabled = true;
+        enemyStatus.enabled = true;
+        enemyHealthBar.SetActive(true);
         enemyHealthBarFull.SetActive(true);
     }
 
-    private void HideAll()
+    public void HideAllyHUD()
     {
         allyName.enabled = false;
         allyLevel.enabled = false;
         allyHealth.enabled = false;
-        enemyName.enabled = false;
-        enemyLevel.enabled = false;
         allyHUD.enabled = false;
-        enemyHUD.enabled = false;
+        allyStatus.enabled = false;
         allyHealthBar.SetActive(false);
         allyExpBar.SetActive(false);
-        enemyHealthBar.SetActive(false);
         allyHealthBarFull.SetActive(false);
+    }
+
+    public void HideEnemyHUD()
+    {
+        enemyName.enabled = false;
+        enemyLevel.enabled = false;
+        enemyHUD.enabled = false;
+        enemyStatus.enabled = false;
+        enemyHealthBar.SetActive(false);
         enemyHealthBarFull.SetActive(false);
     }
 }

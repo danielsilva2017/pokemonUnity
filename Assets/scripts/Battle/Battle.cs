@@ -28,7 +28,7 @@ public interface IBattle
     /// <summary>
     /// Notifies the UI that a switch was performed.
     /// </summary>
-    void NotifySwitchPerformed(Pokemon selection);
+    IEnumerator NotifySwitchPerformed(Pokemon selection);
     /// <summary>
     /// Updates the ally and enemy's health bars and statuses either smoothly or instantly.
     /// </summary>
@@ -44,7 +44,8 @@ public interface IBattle
     /// <summary>
     /// Update battle graphics to represent the Pokemon switched in.
     /// </summary>
-    void RegisterSwitch(Pokemon switchedIn);
+    IEnumerator RegisterSwitch(Pokemon switchedIn);
+    void SwitchUpdateUI(Pokemon switchedIn);
 
     BattleLogic Logic { get; }
     IDialog Chatbox { get; }

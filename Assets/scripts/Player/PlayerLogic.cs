@@ -12,6 +12,7 @@ public enum Direction
 public class PlayerLogic : MonoBehaviour
 {
     public float moveSpeed;
+    public Rigidbody2D rigidbody2D;
     public LayerMask solidLayer;  // solid objects
     public LayerMask grassLayer;  // grass
     public LayerMask waterLayer;  // water
@@ -19,6 +20,7 @@ public class PlayerLogic : MonoBehaviour
     public LayerMask noJumpLayer; // walkable, cannot jump over something from here
     public Overworld overworld;
     public PlayerUI playerUI; // transitions and animations other than moving
+    public AudioSource battleMusicPlayer;
 
     private bool isMoving;
     private bool isRunning;
@@ -30,8 +32,9 @@ public class PlayerLogic : MonoBehaviour
     private int interactionForbiddenFrames; // do not allow interaction for this amount of frames
     private GameObject interactable;
     private Vector2 input;
-    private Animator animator;
+    private readonly float maxIgnorableDistance = 0.5f; // used in NPC collision calculations
 
+    public Animator Animator { get; set; }
     public Direction Direction { get; set; }
     public Player Player { get; set; }
     public ItemBase b;
@@ -61,7 +64,7 @@ public class PlayerLogic : MonoBehaviour
 
     void Awake()
     {
-        animator = GetComponent<Animator>();
+        Animator = GetComponent<Animator>();
     }
 
     void Update()
@@ -103,10 +106,11 @@ public class PlayerLogic : MonoBehaviour
                 Direction = input.y < 0 ? Direction.Down : Direction.Up;
             }
 
-            if (input != Vector2.zero)
+            if (input != Vector2.zero) // will attempt to move
             {
-                animator.SetFloat("moveX", input.x);
-                animator.SetFloat("moveY", input.y);
+                rigidbody2D.WakeUp(); // force it to recompute physics
+                Animator.SetFloat("moveX", input.x);
+                Animator.SetFloat("moveY", input.y);
 
                 var targetPos = transform.position;
                 targetPos.x += input.x;
@@ -120,9 +124,9 @@ public class PlayerLogic : MonoBehaviour
         //only run while pressing key
         isRunning = Input.GetKey(KeyCode.X);
 
-        animator.SetBool("isMoving", isMoving);
-        animator.SetBool("isRunning", isRunning);
-        animator.SetBool("isJumping", isJumping);
+        Animator.SetBool("isMoving", isMoving);
+        Animator.SetBool("isRunning", isRunning);
+        Animator.SetBool("isJumping", isJumping);
     }
 
     private IEnumerator PlayEnterSceneTransition()
@@ -156,6 +160,9 @@ public class PlayerLogic : MonoBehaviour
         transform.position = target;
         isMoving = false;
         isJumping = false;
+
+        //var xx = Physics2D.Raycast(transform.position, Vector2.right);
+        //Debug.Log(xx.collider);
         
         CheckForPokemons();
     }
@@ -186,20 +193,20 @@ public class PlayerLogic : MonoBehaviour
         switch (direction)
         {
             case Direction.Down:
-                animator.SetFloat("moveX", 0f);
-                animator.SetFloat("moveY", -1f);
+                Animator.SetFloat("moveX", 0f);
+                Animator.SetFloat("moveY", -1f);
                 break;
             case Direction.Up:
-                animator.SetFloat("moveX", 0f);
-                animator.SetFloat("moveY", 1f);
+                Animator.SetFloat("moveX", 0f);
+                Animator.SetFloat("moveY", 1f);
                 break;
             case Direction.Left:
-                animator.SetFloat("moveX", -1f);
-                animator.SetFloat("moveY", 0f);
+                Animator.SetFloat("moveX", -1f);
+                Animator.SetFloat("moveY", 0f);
                 break;
             case Direction.Right:
-                animator.SetFloat("moveX", 1f);
-                animator.SetFloat("moveY", 0f);
+                Animator.SetFloat("moveX", 1f);
+                Animator.SetFloat("moveY", 0f);
                 break;
         }
 
@@ -231,6 +238,7 @@ public class PlayerLogic : MonoBehaviour
     {
         isBusy = true; // stop inputs
         overworld.locationMusic.Stop();
+        Animator.speed = 0;
         yield return playerUI.WildBattleTransition();
         SceneInfo.BeginWildBattle(this, overworld.GenerateGrassEncounter(), overworld.weather);
     }
@@ -239,6 +247,7 @@ public class PlayerLogic : MonoBehaviour
     {
         if (interactionForbiddenFrames > 0) return;
         isInteractionFinished = false;
+        isMoving = false;
 
         switch (interactable.tag)
         {
@@ -278,34 +287,41 @@ public class PlayerLogic : MonoBehaviour
 
     void OnTriggerStay2D(Collider2D other)
     {
-        
+        if (other.gameObject.tag != "NPC" && other.gameObject.tag != "Item") return;
+
         var selfPos = transform.position;
         var otherPos = other.gameObject.transform.position;
 
-        // correct errors
-        var xdiff = (Math.Abs(selfPos.x - otherPos.x) >= 1) ? selfPos.x : otherPos.x;
-        var ydiff = (Math.Abs(selfPos.y - otherPos.y) >= 1) ? selfPos.y : otherPos.y;
-
-        var location = CollisionFrom(new Vector3(xdiff, ydiff, 0), otherPos);
+        if (!IsValidCollision(selfPos, otherPos)) return;
 
         // use z-index for correct sprite priority
         other.gameObject.transform.position = new Vector3(
             otherPos.x,
             otherPos.y,
-            location == Direction.Down ? 1 : 3
+            Direction == Direction.Down ? 1 : 3
         );
 
-        // directly facing the NPC
-        if (location == Direction)
-            interactable = other.gameObject;
+        // at this point we know the player is directly facing the interactable thing
+        interactable = other.gameObject;
     }
 
-    private Direction? CollisionFrom(Vector3 self, Vector3 other)
+    private bool IsValidCollision(Vector3 self, Vector3 other)
     {
-        if (self.y < other.y) return Direction.Up;
-        else if (self.y > other.y) return Direction.Down;
-        else if (self.x > other.x) return Direction.Left;
-        else if (self.x < other.x) return Direction.Right;
-        else return null;
+        var xdiff = Math.Abs(self.x - other.x);
+        var ydiff = Math.Abs(self.y - other.y);
+
+        switch (Direction)
+        {
+            case Direction.Up:
+                return xdiff <= maxIgnorableDistance && self.y < other.y;
+            case Direction.Down:
+                return xdiff <= maxIgnorableDistance && self.y > other.y;
+            case Direction.Left:
+                return ydiff <= maxIgnorableDistance && self.x > other.x;
+            case Direction.Right:
+                return ydiff <= maxIgnorableDistance && self.x < other.x;
+            default:
+                return false;
+        }
     }
 }
