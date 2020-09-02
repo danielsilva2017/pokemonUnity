@@ -4,6 +4,12 @@ using UnityEngine;
 using UnityEngine.UI;
 using System;
 
+public enum Direction
+{
+    Up, Down, Left, Right
+}
+
+
 public class Utils
 {
     /// <summary>
@@ -144,6 +150,84 @@ public class Utils
     public static IEnumerator FadeOut(SpriteRenderer sprite, int frames)
     {
         yield return Fade(sprite, frames, false);
+    }
+
+    /// <summary>
+    /// Does nothing for a certain amount of frames.
+    /// </summary>
+    public static IEnumerator Stall(int frames)
+    {
+        for (var i = 0; i < frames; i++)
+            yield return null;
+    }
+
+    /// <summary>
+    /// Does not proceed until a certain key is pressed.
+    /// </summary>
+    public static IEnumerator AwaitKey(KeyCode key)
+    {
+        while (!Input.GetKeyDown(key))
+            yield return null;
+    }
+
+    /// <summary>
+    /// Checks if a given grid position is part of a layer.
+    /// </summary>
+    public static bool PositionIsLayer(Vector3 position, LayerMask layer)
+    {
+        return Physics2D.OverlapCircle(position, 0.1f, layer) != null;
+    }
+
+    /// <summary>
+    /// Converts a Vector3 to a Vector2 in the fastest way.
+    /// </summary>
+    public static Vector2 MakeVector2(Vector3 vector)
+    {
+        return new Vector2(vector.x, vector.y);
+    }
+
+    /// <summary>
+    /// Gets the next step in a particular direction.
+    /// </summary>
+    public static Vector3 GetMovementTarget(Vector3 currentPosition, Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.Down:
+                currentPosition.y--;
+                return currentPosition;
+            case Direction.Up:
+                currentPosition.y++;
+                return currentPosition;
+            case Direction.Left:
+                currentPosition.x--;
+                return currentPosition;
+            case Direction.Right:
+                currentPosition.x++;
+                return currentPosition;
+            default:
+                return currentPosition;
+        }
+    }
+
+    /// <summary>
+    /// Gets the opposite direction.
+    /// </summary>
+    public static Direction GetOppositeDirection(Direction direction)
+    {
+        switch (direction)
+        {
+            case Direction.Down:
+                return Direction.Up;
+            case Direction.Up:
+                return Direction.Down;
+            case Direction.Left:
+                return Direction.Right;
+            case Direction.Right:
+                return Direction.Left;
+            default:
+                return direction;
+        }
     }
 
     /// <summary>

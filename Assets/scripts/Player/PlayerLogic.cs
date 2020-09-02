@@ -4,15 +4,10 @@ using UnityEngine;
 using UnityEngine.UI;
 using static Utils;
 
-public enum Direction
-{
-    Up, Down, Left, Right
-}
-
 public class PlayerLogic : MonoBehaviour
 {
     public float moveSpeed;
-    public Rigidbody2D rigidbody2D;
+    public Rigidbody2D rb2d;
     public LayerMask solidLayer;  // solid objects
     public LayerMask grassLayer;  // grass
     public LayerMask waterLayer;  // water
@@ -22,21 +17,21 @@ public class PlayerLogic : MonoBehaviour
     public PlayerUI playerUI; // transitions and animations other than moving
     public AudioSource battleMusicPlayer;
 
-    private bool isMoving;
-    private bool isRunning;
-    private bool isJumping;
-    private bool isSurfing;
-    private bool isUsingMenu;
-    private bool isBusy; // general boolean for dropping inputs
-    private bool isInteractionFinished; // used by interactable to signal dialogue is over
     private int interactionForbiddenFrames; // do not allow interaction for this amount of frames
-    private GameObject interactable;
     private Vector2 input;
     private readonly float maxIgnorableDistance = 0.5f; // used in NPC collision calculations
 
+    public GameObject Interactable { get; set; }
     public Animator Animator { get; set; }
     public Direction Direction { get; set; }
     public Player Player { get; set; }
+    public bool IsMoving { get; set; }
+    public bool IsRunning { get; set; }
+    public bool IsJumping { get; set; }
+    public bool IsSurfing { get; set; }
+    public bool IsUsingMenu { get; set; }
+    public bool IsBusy { get; set; } // general boolean for dropping inputs
+    public bool IsInteractionFinished { get; set; } // used by interactable to signal dialogue is over
     public ItemBase b;
     void Start()
     {
@@ -58,7 +53,7 @@ public class PlayerLogic : MonoBehaviour
         }
         Player.Bag.AddItem(new Item(b), 20);
         overworld.locationMusic.Play();
-        isInteractionFinished = true;
+        IsInteractionFinished = true;
         StartCoroutine(PlayEnterSceneTransition());
     }
 
@@ -69,21 +64,21 @@ public class PlayerLogic : MonoBehaviour
 
     void Update()
     {
-        if (!isInteractionFinished || isBusy) return; // drop inputs
+        if (!IsInteractionFinished || IsBusy) return; // drop inputs
 
         if (interactionForbiddenFrames > 0) // stop user from beginning interaction on the same keypress that ended one
             interactionForbiddenFrames--;
 
         if (Input.GetKeyUp(KeyCode.Return) && !playerUI.menu.IsBusy) // open/close side menu
-            isUsingMenu = playerUI.menu.Toggle();
+            IsUsingMenu = playerUI.menu.Toggle();
 
-        if (Input.GetKeyUp(KeyCode.X) && isUsingMenu) // x also closes menu
-            isUsingMenu = playerUI.menu.Toggle();
+        if (Input.GetKeyUp(KeyCode.X) && IsUsingMenu) // x also closes menu
+            IsUsingMenu = playerUI.menu.Toggle();
 
-        if (!isMoving && !isJumping && !isUsingMenu) // process movement if not busy
+        if (!IsMoving && !IsJumping && !IsUsingMenu) // process movement if not busy
         {
             // interact with something if it exists
-            if (Input.GetKeyDown(KeyCode.Z) && interactable != null)
+            if (Input.GetKeyDown(KeyCode.Z) && Interactable != null)
             {
                 Interact();
                 return;
@@ -96,19 +91,19 @@ public class PlayerLogic : MonoBehaviour
             if (input.x != 0)
             {
                 input.y = 0;
-                interactable = null; // clear interaction; will be set again by trigger if one is available
+                Interactable = null; // clear interaction; will be set again by trigger if one is available
                 Direction = input.x < 0 ? Direction.Left : Direction.Right;
             }
             else if (input.y != 0)
             {
                 input.x = 0;
-                interactable = null; // clear interaction; will be set again by trigger if one is available
+                Interactable = null; // clear interaction; will be set again by trigger if one is available
                 Direction = input.y < 0 ? Direction.Down : Direction.Up;
             }
 
             if (input != Vector2.zero) // will attempt to move
             {
-                rigidbody2D.WakeUp(); // force it to recompute physics
+                rb2d.WakeUp(); // force it to recompute physics
                 Animator.SetFloat("moveX", input.x);
                 Animator.SetFloat("moveY", input.y);
 
@@ -122,28 +117,28 @@ public class PlayerLogic : MonoBehaviour
         }
 
         //only run while pressing key
-        isRunning = Input.GetKey(KeyCode.X);
+        IsRunning = Input.GetKey(KeyCode.X);
 
-        Animator.SetBool("isMoving", isMoving);
-        Animator.SetBool("isRunning", isRunning);
-        Animator.SetBool("isJumping", isJumping);
+        Animator.SetBool("isMoving", IsMoving);
+        Animator.SetBool("isRunning", IsRunning);
+        Animator.SetBool("isJumping", IsJumping);
     }
 
     private IEnumerator PlayEnterSceneTransition()
     {
-        isBusy = true;
+        IsBusy = true;
         yield return playerUI.EnterSceneTransition();
-        isBusy = false;
+        IsBusy = false;
     }
 
     // IEnumerator is used to do something over a period of time -  move current to target pos over a period of time
     private IEnumerator Move(Vector3 target)
     {
-        isMoving = true;
+        IsMoving = true;
 
         if (PositionIsLayer(target, jumpLayer))
         {
-            isJumping = true;
+            IsJumping = true;
             target = GetJumpTarget(target);
         }
 
@@ -152,18 +147,21 @@ public class PlayerLogic : MonoBehaviour
             transform.position = Vector3.MoveTowards(
                 transform.position, 
                 target,
-                moveSpeed * (isRunning && !isJumping ? 2 : 1) * Time.deltaTime
+                moveSpeed * (IsRunning && !IsJumping ? 2 : 1) * Time.deltaTime
             ); 
             yield return null;
         }
 
         transform.position = target;
-        isMoving = false;
-        isJumping = false;
+        IsMoving = false;
+        IsJumping = false;
 
         //var xx = Physics2D.Raycast(transform.position, Vector2.right);
         //Debug.Log(xx.collider);
-        
+
+        foreach (var npc in overworld.characters)
+            npc.NotifyPlayerMoved();
+
         CheckForPokemons();
     }
 
@@ -213,11 +211,10 @@ public class PlayerLogic : MonoBehaviour
         Direction = direction;
     }
 
-    // checks if the target Pos contains objects with SolidObjectsLayer, 0.2f is the offset radius
     private bool IsWalkable(Vector3 target)
     {
         return !PositionIsLayer(target, solidLayer) && // solid block
-            !(PositionIsLayer(target, waterLayer) && !isSurfing) && // water when on foot
+            !(PositionIsLayer(target, waterLayer) && !IsSurfing) && // water when on foot
             !(PositionIsLayer(target, jumpLayer) && PositionIsLayer(transform.position, noJumpLayer)); // trying to jump when not allowed
     }
 
@@ -228,15 +225,10 @@ public class PlayerLogic : MonoBehaviour
                 StartCoroutine(BeginWildBattle());
         }
     }
-
-    private bool PositionIsLayer(Vector3 position, LayerMask layer)
-    {
-        return Physics2D.OverlapCircle(position, 0.2f, layer) != null;
-    }
     
     private IEnumerator BeginWildBattle()
     {
-        isBusy = true; // stop inputs
+        IsBusy = true; // stop inputs
         overworld.locationMusic.Stop();
         Animator.speed = 0;
         yield return playerUI.WildBattleTransition();
@@ -246,30 +238,39 @@ public class PlayerLogic : MonoBehaviour
     private void Interact()
     {
         if (interactionForbiddenFrames > 0) return;
-        isInteractionFinished = false;
-        isMoving = false;
+        IsInteractionFinished = false;
+        IsMoving = false;
 
-        switch (interactable.tag)
+        switch (Interactable.tag)
         {
             case "NPC":
-                interactable.GetComponent<NPC>().Interact(this);
+                var npc = Interactable.GetComponent<NPC>();
+                if (!npc.IsBusy)
+                {
+                    npc.FaceDirection(GetOppositeDirection(Direction));
+                    npc.Interact();
+                }
+                else // abort interaction attempt
+                {
+                    IsInteractionFinished = true;
+                }
                 break;
             case "Item":
-                interactable.GetComponent<OverworldItem>().Collect(this);
+                Interactable.GetComponent<OverworldItem>().Collect(this);
                 break;
             default:
-                isInteractionFinished = true;
+                IsInteractionFinished = true;
                 break;
         } 
     }
 
     public void EndInteraction()
     {
-        isInteractionFinished = true;
+        IsInteractionFinished = true;
 
         // required due to the order in which update() functions are run
         interactionForbiddenFrames = 2;
-        if (interactable.tag == "Item") interactable = null;
+        if (Interactable.tag == "Item") Interactable = null;
     }
 
     void OnTriggerEnter2D(Collider2D other)
@@ -302,7 +303,7 @@ public class PlayerLogic : MonoBehaviour
         );
 
         // at this point we know the player is directly facing the interactable thing
-        interactable = other.gameObject;
+        Interactable = other.gameObject;
     }
 
     private bool IsValidCollision(Vector3 self, Vector3 other)

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Runtime.Serialization;
 using UnityEngine;
-using UnityEngine.SceneManagement;
+using System;
 using static Utils;
 
 [System.Serializable]
@@ -16,6 +16,9 @@ public class Trainer : NPC
 {
     public string trainerName;
     public TrainerBase skeleton;
+    public int playerDetectionRadius;
+    public int roamRadius;
+    public Direction startingDirection;
     [TextArea] public string[] dialogue;
     [TextArea] public string[] defeatDialogue;
     [TextArea] public string[] postDialogue;
@@ -23,18 +26,111 @@ public class Trainer : NPC
     public int difficulty;
     public int money;
     public TrainerPokemonInit[] pokemons;
+    public PlayerLogic playerLogic;
+    public LayerMask solidLayer;
+    public LayerMask waterLayer;
+    public LayerMask jumpLayer;
+    public AudioSource detectedPlayer;
 
     private List<Pokemon> party;
+    private readonly float maxIgnorableDistance = 0.5f; // used in NPC collision calculations
+    private SpriteRenderer exclamation;
 
     void Start()
     {
         Name = trainerName;
+        RoamRadius = roamRadius;
+        Direction = startingDirection;
         Dialogue = dialogue;
         PostDialogue = postDialogue;
-        party = new List<Pokemon>(pokemons.Length);
+        PlayerLogic = playerLogic;
+        SolidLayer = solidLayer;
+        WaterLayer = waterLayer;
+        JumpLayer = jumpLayer;
+        OriginalPosition = transform.position;
 
+        party = new List<Pokemon>(pokemons.Length);
         foreach (var init in pokemons)
             party.Add(CreatePokemon(init.speciesName, init.level));
+
+        Animator = GetComponent<Animator>();
+        Animator.runtimeAnimatorController = Resources.Load<RuntimeAnimatorController>($"Trainers/{skeleton.animationPrefix}_ctrl");
+        exclamation = transform.GetChild(0).GetComponent<SpriteRenderer>();
+        exclamation.gameObject.SetActive(false);
+        FaceDirection(Direction);
+    }
+
+    protected override void OnIdle()
+    {
+        if (RoamRadius > 0)
+            TryDetectPlayer();
+    }
+
+    public override void NotifyPlayerMoved()
+    {
+        TryDetectPlayer();
+    }
+
+    private void TryDetectPlayer()
+    {
+        if (playerDetectionRadius <= 0) return;
+
+        var selfPos = transform.position;
+        var playerPos = playerLogic.transform.position;
+
+        if (!IsDefeated && !IsBusy && !playerLogic.IsBusy && HasDetectedPlayer(selfPos, playerPos))
+            StartCoroutine(EngagePlayer());
+    }
+
+    private IEnumerator EngagePlayer()
+    {
+        playerLogic.IsBusy = true;
+        playerLogic.IsMoving = false;
+        playerLogic.IsRunning = false;
+        playerLogic.Animator.SetBool("isMoving", false);
+        playerLogic.Animator.SetBool("isRunning", false);
+        IsMoving = false;
+        IsBusy = true;
+
+        exclamation.gameObject.SetActive(true);
+        yield return FadeIn(exclamation, 5);
+        detectedPlayer.Play();
+        yield return Stall(30);
+        yield return FadeOut(exclamation, 5);
+        exclamation.gameObject.SetActive(false);
+
+        OnInteractionStart();
+
+        var target = GetMovementTarget(transform.position, Direction);
+        while (IsWalkable(target))
+        {
+            yield return Move(target);
+            target = GetMovementTarget(transform.position, Direction);
+        }
+
+        playerLogic.Interactable = gameObject;
+        Interact(false);
+    }
+
+    private bool HasDetectedPlayer(Vector3 self, Vector3 player)
+    {
+        var xdiff = Math.Abs(self.x - player.x);
+        var ydiff = Math.Abs(self.y - player.y);
+        var maxdiff = playerDetectionRadius + 0.4f;
+
+        switch (Direction)
+        {
+            case Direction.Up:
+                return xdiff <= maxIgnorableDistance && self.y < player.y && ydiff <= maxdiff;
+            case Direction.Down:
+                return xdiff <= maxIgnorableDistance && self.y > player.y && ydiff <= maxdiff;
+            case Direction.Left:
+                return ydiff <= maxIgnorableDistance && self.x > player.x && xdiff <= maxdiff;
+            case Direction.Right:
+                return ydiff <= maxIgnorableDistance && self.x < player.x && xdiff <= maxdiff;
+            default:
+                return false;
+        }
     }
 
     protected override void OnInteractionStart()
