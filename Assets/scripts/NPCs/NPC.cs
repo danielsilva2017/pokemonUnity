@@ -169,7 +169,7 @@ public abstract class NPC : MonoBehaviour
 
             IsBusy = false;
             OnIdle();
-            yield return new WaitForSeconds(1f);
+            yield return new WaitForSeconds(RandomFloat(0.5f, 4f));
         }
 
         IsIdling = false;

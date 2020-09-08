@@ -19,6 +19,7 @@ public class PlayerUI : MonoBehaviour
     public SpriteRenderer introEffect;
     public SpriteRenderer transition;
     public AudioSource wildBattleMusic;
+    public AudioSource areaExitSound;
     public OverworldDialog chatbox;
 
     public Image RouteHeader { get; set; }
@@ -43,7 +44,7 @@ public class PlayerUI : MonoBehaviour
         
     }
 
-    public IEnumerator EnterSceneTransition()
+    public IEnumerator EnterSceneTransition(Overworld overworld)
     {
         transition.gameObject.SetActive(true);
         transition.transform.position = mainCamera.ScreenToWorldPoint(new Vector3(
@@ -54,6 +55,16 @@ public class PlayerUI : MonoBehaviour
         MakeVisible(transition);
         yield return FadeOut(transition, 20);
         transition.gameObject.SetActive(false);
+        EnterAreaOnSpawn(overworld);
+    }
+
+    public IEnumerator ExitAreaTransition()
+    {
+        areaExitSound.Play();
+        transition.gameObject.SetActive(true);
+        transition.transform.position = transform.position;
+        yield return FadeIn(transition, 10);
+        yield return Stall(10);
     }
 
     public IEnumerator TrainerBattleTransition(PlayerLogic playerLogic, AudioClip music)
@@ -126,14 +137,37 @@ public class PlayerUI : MonoBehaviour
         transition.gameObject.SetActive(false);
     }
 
-    public void PassAreaBorder(AreaBorder border, Overworld oldOverworld)
+    /// <summary>
+    /// Display an area border upon entering the new scene.
+    /// </summary>
+    private void EnterAreaOnSpawn(Overworld overworld)
+    {
+        overworld.locationMusic.Play();
+
+        if (!SceneInfo.DisplayAreaHeaderOnSpawn) return;
+
+        var border = new FakeAreaBorder
+        {
+            Overworld = overworld,
+            IsAnimating = true
+        };
+
+        SceneInfo.SetAnimatedAreaBorder(border);
+        RouteName.text = overworld.locationName;
+        StartCoroutine(DisplayAreaHeader(border));
+    }
+
+    /// <summary>
+    /// Transition from one overworld to another in the same scene.
+    /// </summary>
+    public void PassAreaBorder(IAreaBorder border, Overworld oldOverworld)
     {
         // manage old area
         oldOverworld.locationMusic.Stop();
         SceneInfo.SetOverworldInfo(oldOverworld);
 
         // manage new area
-        var newOverworld = border.overworld;
+        var newOverworld = border.Overworld;
         newOverworld.locationMusic.Play();
 
         // end existing animation
@@ -151,7 +185,7 @@ public class PlayerUI : MonoBehaviour
         StartCoroutine(DisplayAreaHeader(border));
     }
 
-    private IEnumerator DisplayAreaHeader(AreaBorder border)
+    private IEnumerator DisplayAreaHeader(IAreaBorder border)
     {
         var header = RouteHeader.transform;
         var showPos = RouteShowPosition.transform.localPosition;

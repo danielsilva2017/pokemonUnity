@@ -190,7 +190,7 @@ public class OverworldBag : MonoBehaviour, ITransitionable
 
             chatSound.Play();
             if (item.Usage == ItemUsage.TargetsEnemy)
-                chatbox.PrintSilent("This item can't be used right now.");
+                StartCoroutine(PreventUsage());
             else
             {
                 ItemToUse = item;
@@ -198,6 +198,16 @@ public class OverworldBag : MonoBehaviour, ITransitionable
                 StartCoroutine(SummonConfirmationBox());
             } 
         }
+    }
+
+    private IEnumerator PreventUsage()
+    {
+        IsBusy = true;
+        chatbox.gameObject.SetActive(true);
+        yield return chatbox.Print("This item can't be used right now.");
+        yield return AwaitKeys(KeyCode.X, KeyCode.Z);
+        chatbox.gameObject.SetActive(false);
+        IsBusy = false;
     }
 
     private IEnumerator SummonConfirmationBox()

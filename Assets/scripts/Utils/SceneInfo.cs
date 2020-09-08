@@ -4,6 +4,11 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+public enum SceneID
+{
+    Title, Initial, StarterSelection, SingleBattle, PokeCenter, Forest1
+}
+
 /// <summary>
 /// Class used to pass information between scenes.
 /// </summary>
@@ -12,13 +17,17 @@ public static class SceneInfo
     private static BattleInfo battleInfo;
     private static Dictionary<string, OverworldInfo> overworldInfo;
     private static PlayerInfo playerInfo;
-    private static AreaBorder animatedAreaBorder;
+    private static Vector2? targetCoordinates;
+    private static IAreaBorder animatedAreaBorder;
     private static AudioSource battleMusic;
     private static Outcome? forcedOutcome;
+
+    public static bool DisplayAreaHeaderOnSpawn { get; set; }
 
     static SceneInfo()
     {
         overworldInfo = new Dictionary<string, OverworldInfo>();
+        DisplayAreaHeaderOnSpawn = true;
     }
 
     /// <summary>
@@ -38,7 +47,8 @@ public static class SceneInfo
 
         SetOverworldInfo(playerLogic);
         SetPlayerInfo(playerLogic);
-        SceneManager.LoadScene(3);
+        DisplayAreaHeaderOnSpawn = false;
+        SceneManager.LoadScene((int) SceneID.SingleBattle);
     }
 
     /// <summary>
@@ -57,7 +67,8 @@ public static class SceneInfo
 
         SetOverworldInfo(playerLogic);
         SetPlayerInfo(playerLogic);
-        SceneManager.LoadScene(3);
+        DisplayAreaHeaderOnSpawn = false;
+        SceneManager.LoadScene((int) SceneID.SingleBattle);
     }
 
     /// <summary>
@@ -67,6 +78,19 @@ public static class SceneInfo
     {
         StopBattleMusic();
         SceneManager.LoadScene(playerInfo.Scene);
+    }
+
+    /// <summary>
+    /// Transitions to an overworld in a different scene.
+    /// </summary>
+    public static void FollowAreaExit(AreaExit exit, PlayerLogic playerLogic)
+    {
+        SetOverworldInfo(playerLogic);
+        SetPlayerInfo(playerLogic);
+        SetTargetCoordinates(exit);
+        playerInfo.OverworldKey = exit.targetOverworldName;
+        DisplayAreaHeaderOnSpawn = true;
+        SceneManager.LoadScene((int) exit.scene);
     }
 
     /// <summary>
@@ -81,9 +105,9 @@ public static class SceneInfo
         };
     }
 
-    public static void SetAnimatedAreaBorder(AreaBorder ab)
+    public static void SetAnimatedAreaBorder(IAreaBorder border)
     {
-        animatedAreaBorder = ab;
+        animatedAreaBorder = border;
     }
 
     private static void SetOverworldInfo(PlayerLogic playerLogic)
@@ -93,6 +117,11 @@ public static class SceneInfo
             Characters = playerLogic.overworld.characters,
             Items = playerLogic.overworld.items
         };
+    }
+
+    private static void SetTargetCoordinates(AreaExit exit)
+    {
+        targetCoordinates = exit.targetCoordinates;
     }
 
     private static void SetPlayerInfo(PlayerLogic playerLogic)
@@ -156,7 +185,12 @@ public static class SceneInfo
             return value;
     }
 
-    public static AreaBorder GetAnimatedAreaBorder()
+    public static Vector2? GetTargetCoordinates()
+    {
+        return targetCoordinates;
+    }
+
+    public static IAreaBorder GetAnimatedAreaBorder()
     {
         return animatedAreaBorder;
     }
@@ -179,6 +213,11 @@ public static class SceneInfo
     public static void DeleteOverworldInfo(string name)
     {
         overworldInfo[name] = null;
+    }
+
+    public static void DeleteTargetCoordinates()
+    {
+        targetCoordinates = null;
     }
 
     public static void DeletePlayerInfo()
@@ -212,4 +251,9 @@ public class PlayerInfo
     public Direction Direction { get; set; }
     public string OverworldKey { get; set; }
     public int Scene { get; set; }
+}
+
+public class OverworldSceneInfo
+{
+    public int EntryID { get; set; }
 }

@@ -40,19 +40,26 @@ public class PlayerLogic : MonoBehaviour
 
         if (playerInfo == null) // create new
         {
-            Direction = Direction.Down;
+            FaceDirection(Direction.Down);
             Player = new Player();
         }
         else // load state
         {
             FaceDirection(playerInfo.Direction);
             Player = new Player(playerInfo.Player);
-            transform.position = playerInfo.Position;
             overworld = GameObject.Find(playerInfo.OverworldKey).GetComponent<Overworld>();
+
+            var targetCoordinates = SceneInfo.GetTargetCoordinates();
+            transform.position = new Vector3(
+                targetCoordinates?.x ?? playerInfo.Position.x, 
+                targetCoordinates?.y ?? playerInfo.Position.y, 
+                playerInfo.Position.z
+            );
+
             SceneInfo.DeletePlayerInfo();
+            SceneInfo.DeleteTargetCoordinates();
         }
         Player.Bag.AddItem(new Item(b), 20);
-        overworld.locationMusic.Play();
         IsInteractionFinished = true;
         StartCoroutine(PlayEnterSceneTransition());
     }
@@ -127,7 +134,7 @@ public class PlayerLogic : MonoBehaviour
     private IEnumerator PlayEnterSceneTransition()
     {
         IsBusy = true;
-        yield return playerUI.EnterSceneTransition();
+        yield return playerUI.EnterSceneTransition(overworld);
         IsBusy = false;
     }
 
@@ -235,6 +242,13 @@ public class PlayerLogic : MonoBehaviour
         SceneInfo.BeginWildBattle(this, overworld.GenerateGrassEncounter(), overworld.weather);
     }
 
+    private IEnumerator OnAreaExit(AreaExit exit)
+    {
+        IsBusy = true;
+        yield return playerUI.ExitAreaTransition();
+        SceneInfo.FollowAreaExit(exit, this);
+    }
+
     private void Interact()
     {
         if (interactionForbiddenFrames > 0) return;
@@ -275,14 +289,20 @@ public class PlayerLogic : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (other.tag == "Area Border")
+        switch (other.tag)
         {
-            var border = other.gameObject.GetComponent<AreaBorder>();
-            if (border.overworld.locationName != overworld.locationName) // change area
-            {
-                playerUI.PassAreaBorder(border, overworld);
-                overworld = border.overworld;
-            }
+            case "Area Border":
+                var border = other.gameObject.GetComponent<AreaBorder>();
+                if (border.overworld.locationName != overworld.locationName) // player is now in a different area
+                {
+                    playerUI.PassAreaBorder(border, overworld);
+                    overworld = border.overworld;
+                }
+                break;
+            case "Area Exit":
+                var exit = other.gameObject.GetComponent<AreaExit>();
+                StartCoroutine(OnAreaExit(exit));
+                break;
         }
     }
 

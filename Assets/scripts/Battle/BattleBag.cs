@@ -206,7 +206,7 @@ public class BattleBag : MonoBehaviour
         chatbox.gameObject.SetActive(true);
         IsBusy = true;
         yield return chatbox.Print(message);
-        while (!Input.GetKeyDown(KeyCode.Z)) yield return null;
+        yield return AwaitKey(KeyCode.Z);
         chatSound.Play();
         chatbox.gameObject.SetActive(false);
         IsBusy = false;

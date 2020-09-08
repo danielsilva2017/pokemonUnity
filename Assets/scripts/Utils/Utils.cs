@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using System;
+using System.Linq;
 
 public enum Direction
 {
@@ -167,6 +168,15 @@ public class Utils
     public static IEnumerator AwaitKey(KeyCode key)
     {
         while (!Input.GetKeyDown(key))
+            yield return null;
+    }
+
+    /// <summary>
+    /// Does not proceed until at least one of the specified keys is pressed.
+    /// </summary>
+    public static IEnumerator AwaitKeys(params KeyCode[] keys)
+    {
+        while (!keys.Any(key => Input.GetKeyDown(key)))
             yield return null;
     }
 

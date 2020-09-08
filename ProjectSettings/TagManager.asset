@@ -6,6 +6,8 @@ TagManager:
   tags:
   - NPC
   - Item
+  - Area Border
+  - Area Exit
   layers:
   - Default
   - TransparentFX
