@@ -16,7 +16,7 @@ MonoBehaviour:
   dexNumber: 4
   icon: {fileID: 21300000, guid: 1db8c546a02d2f846bc632f0c44fa9db, type: 3}
   primaryType: 3
-  secondaryType: 10
+  secondaryType: 12
   hpStat: 39
   atkStat: 52
   defStat: 43
@@ -29,7 +29,7 @@ MonoBehaviour:
   maleChance: 87.5
   cry: {fileID: 8300000, guid: 0a36bae10fcd5af4aab499e34d70cf8b, type: 3}
   learnableAbilities:
-  - {fileID: 11400000, guid: 93d591a2248ef6c47b38d435a576c086, type: 2}
+  - {fileID: 11400000, guid: ed31c51450bda3a43b09acba758aebfb, type: 2}
   learnableMoves:
   - skeleton: {fileID: 11400000, guid: e0cdc3c7c3082ae4cbc5d9048d37e456, type: 2}
     level: 1

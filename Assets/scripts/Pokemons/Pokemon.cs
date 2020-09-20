@@ -70,7 +70,25 @@ public class Pokemon : IComparable<Pokemon>
         }
     }
 
-    
+    public bool IsType(Type type)
+    {
+        return PrimaryType == type || SecondaryType == type;
+    }
+
+    public List<MoveBase> NewMovesFromLevelUp()
+    {
+        var moves = new List<MoveBase>();
+
+        foreach (var learnableMove in Skeleton.learnableMoves)
+        {
+            if (learnableMove.level == Level)
+                moves.Add(learnableMove.skeleton);
+            else if (learnableMove.level > Level)
+                break;
+        }
+
+        return moves;
+    }
 
     public void LevelUp()
     {
@@ -79,6 +97,14 @@ public class Pokemon : IComparable<Pokemon>
         CurLevelExp = NextLevelExp;
         NextLevelExp = Level + 1 >= 100 ? MaxExperience : GetExpFromLevel(Level + 1, ExpGroup);
         Health += MaxHealth - oldMaxHp;
+    }
+
+    public int GetFilledMoveSlots()
+    {
+        if (Moves[1] == null) return 1;
+        else if (Moves[2] == null) return 2;
+        else if (Moves[3] == null) return 3;
+        return 4;
     }
 
     public bool NoMoves()

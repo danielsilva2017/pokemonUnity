@@ -30,6 +30,7 @@ public class SingleBattle : MonoBehaviour, IBattle
     private int orderIndex;
     private int actionIndex;
     private int moveIndex;
+    private int confirmationIndex;
     private int forcedSwitchIndex;
     private bool isForcedSwitch;
     private List<Pokemon> order;
@@ -70,6 +71,7 @@ public class SingleBattle : MonoBehaviour, IBattle
         enemyUnit.Setup(Logic.ActiveEnemies[0], BattleInfo.IsTrainerBattle);
         hud.Init(playerUnit.Pokemon, enemyUnit.Pokemon);
         chatbox.RefreshMoves(playerUnit.Pokemon);
+        chatbox.confirmationObject.SetActive(false);
 
         if (BattleInfo.IsTrainerBattle) anims.SetupNPCIntro(BattleInfo.Trainer);
         else anims.DisableNPCIntro();
@@ -77,7 +79,25 @@ public class SingleBattle : MonoBehaviour, IBattle
         // Battle intro
         BattleState = BattleState.Intro;
         StartCoroutine(BattleIntro());
-    }   
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        switch (BattleState)
+        {
+            case BattleState.SelectingAction:
+                ActionPicker();
+                break;
+            case BattleState.SelectingMove:
+            case BattleState.SelectingReplacedMove:
+                MovePicker();
+                break;
+            case BattleState.Confirming:
+                ConfirmationPicker();
+                break;
+        }
+    }
 
     private IEnumerator BattleIntro()
     {
@@ -532,6 +552,12 @@ public class SingleBattle : MonoBehaviour, IBattle
     {
         chatbox.SetState(ChatState.SelectMove);
         BattleState = BattleState.SelectingMove;
+        chatbox.RefreshMoves(order[orderIndex]);
+        if (moveIndex >= order[orderIndex].GetFilledMoveSlots())
+        {
+            chatbox.moves[moveIndex].color = Color.black;
+            moveIndex = 0;
+        }
     }
 
     private void BeginTurn()
@@ -582,17 +608,69 @@ public class SingleBattle : MonoBehaviour, IBattle
         }
     }
 
-    // Update is called once per frame
-    void Update()
+    public void RequestConfirmationBox()
     {
-        switch (BattleState)
+        BattleState = BattleState.Confirming;
+        chatbox.confirmationObject.SetActive(true);
+        chatbox.ConfirmationBox.CursorYes();
+        confirmationIndex = 0;
+    }
+
+    public void RequestMoveReplacement(Pokemon learner)
+    {
+        chatbox.RefreshMoves(learner);
+        chatbox.SetState(ChatState.SelectMove);
+        BattleState = BattleState.SelectingReplacedMove;
+    }
+
+    public void GoIdle()
+    {
+        chatbox.SetState(ChatState.ChatOnly);
+        BattleState = BattleState.Idle;
+    }
+
+    public void RefreshMoves(Pokemon ally)
+    {
+        chatbox.RefreshMoves(ally);
+    }
+
+    private void ConfirmationPicker()
+    {
+        var oldConfirmationIndex = confirmationIndex;
+
+        if (Input.GetKeyDown(KeyCode.UpArrow)) confirmationIndex = confirmationIndex == 1 ? 0 : 1;
+        if (Input.GetKeyDown(KeyCode.DownArrow)) confirmationIndex = confirmationIndex == 0 ? 1 : 0;
+
+        if (oldConfirmationIndex != confirmationIndex)
         {
-            case BattleState.SelectingAction:
-                ActionPicker();
-                break;
-            case BattleState.SelectingMove:
-                MovePicker();
-                break;
+            chatSound.Play();
+            if (confirmationIndex == 0) chatbox.ConfirmationBox.CursorYes();
+            else chatbox.ConfirmationBox.CursorNo();
+        }
+
+        // don't learn move
+        if (Input.GetKeyDown(KeyCode.X))
+        {
+            Logic.Confirmation = false;
+            BattleState = BattleState.Idle;
+            chatbox.confirmationObject.SetActive(false);
+            return;
+        }
+
+        // use or cancel
+        if (Input.GetKeyDown(KeyCode.Z))
+        {
+            if (confirmationIndex == 0) // yes
+            {
+                Logic.Confirmation = true;
+            }
+            else // no
+            {
+                Logic.Confirmation = false;
+            }
+
+            BattleState = BattleState.Idle;
+            chatbox.confirmationObject.SetActive(false);
         }
     }
 
@@ -647,7 +725,7 @@ public class SingleBattle : MonoBehaviour, IBattle
         if (Input.GetKeyDown(KeyCode.RightArrow)) moveIndex = moveIndex % 2 != 0 ? moveIndex - 1 : moveIndex + 1;
 
         // reset selection
-        if (playerUnit.Moves[moveIndex] == null) moveIndex = oldIndex;
+        if (chatbox.moves[moveIndex].text == "-") moveIndex = oldIndex;
 
         chatbox.moves[moveIndex].color = Color.blue;
         chatbox.ShowMoveInfo(playerUnit.Moves[moveIndex]);
@@ -660,6 +738,13 @@ public class SingleBattle : MonoBehaviour, IBattle
             if (chatbox.IsBusy) return;
 
             chatSound.Play();
+
+            if (BattleState == BattleState.SelectingReplacedMove)
+            {
+                Logic.MoveLearningSelection = -1;
+                return;
+            }
+
             BeginPlayerAction(true);
             return;
         }
@@ -670,6 +755,13 @@ public class SingleBattle : MonoBehaviour, IBattle
             if (chatbox.IsBusy) return;
 
             chatSound.Play();
+
+            if (BattleState == BattleState.SelectingReplacedMove)
+            {
+                Logic.MoveLearningSelection = moveIndex;
+                return;
+            }
+
             AddMoveCommand(order[orderIndex].Moves[moveIndex], enemyUnit.Pokemon);
         }
     }

@@ -1,6 +1,6 @@
 ﻿public enum Type
 {
-    Normal, Grass, Water, Fire, Electric, Ground, Flying, Ice, Rock, Poison, None
+    Normal, Grass, Water, Fire, Electric, Ground, Flying, Ice, Rock, Poison, Bug, Steel, None
 }
 
 public class Types
@@ -19,6 +19,8 @@ public class Types
             case Type.Ice: return "Ice";
             case Type.Rock: return "Rock";
             case Type.Poison: return "Poison";
+            case Type.Bug: return "Bug";
+            case Type.Steel: return "Steel";
             case Type.None: return "--";
             default: return "???";
         }
@@ -30,17 +32,19 @@ public class Types
     /// </summary>
     private static readonly float[][] matrix = new float[][]
     {
-    /*                      Norm    Grass   Water   Fire    Elec    Grnd    Fly     Ice     Rock    Psn */
-    /* Norm */  new float[]{1f,     1f,     1f,     1f,     1f,     1f,     1f,     1f,     0.5f,   1f   },
-    /* Grass */ new float[]{1f,     0.5f,   2f,     0.5f,   1f,     2f,     0.5f,   1f,     2f,     0.5f },
-    /* Water */ new float[]{1f,     0.5f,   0.5f,   2f,     1f,     2f,     1f,     1f,     2f,     1f   },
-    /* Fire */  new float[]{1f,     2f,     0.5f,   0.5f,   1f,     1f,     1f,     2f,     0.5f,   1f   },
-    /* Elec */  new float[]{1f,     0.5f,   2f,     1f,     0.5f,   0f,     2f,     1f,     1f,     1f   },
-    /* Grnd */  new float[]{1f,     0.5f,   1f,     2f,     2f,     1f,     0f,     1f,     2f,     2f   },
-    /* Fly */   new float[]{1f,     2f,     1f,     1f,     0.5f,   1f,     1f,     1f,     0.5f,   1f   },
-    /* Ice */   new float[]{1f,     2f,     0.5f,   1f,     1f,     2f,     2f,     0.5f,   1f,     1f   },
-    /* Rock */  new float[]{1f,     1f,     1f,     2f,     1f,     0.5f,   2f,     2f,     1f,     1f   },
-    /* Psn */   new float[]{1f,     2f,     1f,     1f,     1f,     0.5f,   1f,     1f,     0.5f,   0.5f }
+    /*                      Norm    Grass   Water   Fire    Elec    Grnd    Fly     Ice     Rock    Psn     Bug     Steel */
+    /* Norm */  new float[]{1f,     1f,     1f,     1f,     1f,     1f,     1f,     1f,     0.5f,   1f,     1f,     0.5f   },
+    /* Grass */ new float[]{1f,     0.5f,   2f,     0.5f,   1f,     2f,     0.5f,   1f,     2f,     0.5f,   0.5f,   0.5f   },
+    /* Water */ new float[]{1f,     0.5f,   0.5f,   2f,     1f,     2f,     1f,     1f,     2f,     1f,     1f,     1f     },
+    /* Fire */  new float[]{1f,     2f,     0.5f,   0.5f,   1f,     1f,     1f,     2f,     0.5f,   1f,     2f,     2f     },
+    /* Elec */  new float[]{1f,     0.5f,   2f,     1f,     0.5f,   0f,     2f,     1f,     1f,     1f,     1f,     1f     },
+    /* Grnd */  new float[]{1f,     0.5f,   1f,     2f,     2f,     1f,     0f,     1f,     2f,     2f,     0.5f,   2f     },
+    /* Fly */   new float[]{1f,     2f,     1f,     1f,     0.5f,   1f,     1f,     1f,     0.5f,   1f,     2f,     0.5f   },
+    /* Ice */   new float[]{1f,     2f,     0.5f,   1f,     1f,     2f,     2f,     0.5f,   1f,     1f,     1f,     0.5f   },
+    /* Rock */  new float[]{1f,     1f,     1f,     2f,     1f,     0.5f,   2f,     2f,     1f,     1f,     2f,     0.5f   },
+    /* Psn */   new float[]{1f,     2f,     1f,     1f,     1f,     0.5f,   1f,     1f,     0.5f,   0.5f,   1f,     0f     },
+    /* Bug */   new float[]{1f,     2f,     1f,     0.5f,   1f,     1f,     0.5f,   1f,     1f,     0.5f,   1f,     0.5f   },
+    /* Steel */ new float[]{1f,     1f,     0.5f,   0.5f,   0.5f,   1f,     1f,     2f,     2f,     1f,     1f,     0.5f   }
     };
 
     /// <summary>

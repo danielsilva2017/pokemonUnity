@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b721d13758cdc46418bf6d6b7a98e861, type: 3}
+  m_Name: Lady
+  m_EditorClassIdentifier: 
+  className: Lady
+  animationPrefix: lady
+  introMusic: {fileID: 8300000, guid: 012a547a74b280845b536fd8b65caef3, type: 3}
+  battleMusic: {fileID: 8300000, guid: 5ffcace1ce8c7df4bab8c52181156791, type: 3}
+  victoryMusic: {fileID: 8300000, guid: 2a715a902e6a19946bf45ae0d439e9c4, type: 3}

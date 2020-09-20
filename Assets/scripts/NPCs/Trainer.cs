@@ -62,23 +62,26 @@ public class Trainer : NPC
 
     protected override void OnIdle()
     {
-        if (RoamRadius > 0)
+        if (RoamRadius > 0 && !playerLogic.IsBusy)
             TryDetectPlayer();
     }
 
     public override void NotifyPlayerMoved()
     {
-        TryDetectPlayer();
+        UpdateSpriteZIndex();
+
+        if (!playerLogic.IsBusy)
+            TryDetectPlayer();
     }
 
     private void TryDetectPlayer()
     {
-        if (playerDetectionRadius <= 0) return;
+        if (playerDetectionRadius <= 0 || IsDefeated) return;
 
         var selfPos = transform.position;
         var playerPos = playerLogic.transform.position;
 
-        if (!IsDefeated && !IsBusy && !playerLogic.IsBusy && HasDetectedPlayer(selfPos, playerPos))
+        if (!IsBusy && !playerLogic.IsBusy && HasDetectedPlayer(selfPos, playerPos))
             StartCoroutine(EngagePlayer());
     }
 
@@ -90,7 +93,6 @@ public class Trainer : NPC
         playerLogic.Animator.SetBool("isMoving", false);
         playerLogic.Animator.SetBool("isRunning", false);
         IsMoving = false;
-        IsBusy = true;
 
         exclamation.gameObject.SetActive(true);
         yield return FadeIn(exclamation, 5);
@@ -101,6 +103,7 @@ public class Trainer : NPC
 
         OnInteractionStart();
 
+        boxCollider2D.enabled = false; // ensure they don't get stuck on terrain while moving towards player
         var target = GetMovementTarget(transform.position, Direction);
         while (IsWalkable(target))
         {
@@ -109,6 +112,7 @@ public class Trainer : NPC
         }
 
         playerLogic.Interactable = gameObject;
+        playerLogic.FaceDirection(GetOppositeDirection(Direction));
         Interact(false);
     }
 

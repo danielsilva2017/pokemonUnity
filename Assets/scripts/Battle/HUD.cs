@@ -129,7 +129,7 @@ public class HUD : MonoBehaviour
         // stop when there's nothing to update - consider fp inaccuracies
         if (Math.Abs(diff) <= 0.0001f) yield break;
 
-        if (displayDamageAnim) StartCoroutine(anims.TakeDamage(enemy));
+        if (displayDamageAnim && diff < 0) StartCoroutine(anims.TakeDamage(enemy));
         var frames = Math.Abs(diff) * updateSpeed;
 
         for (var i = 0; i <= frames; i++)
@@ -201,7 +201,7 @@ public class HUD : MonoBehaviour
         // stop when there's nothing to update - consider fp inaccuracies
         if (Math.Abs(numdiff) <= 0.0001f) yield break;
 
-        StartCoroutine(anims.TakeDamage(ally));
+        if (numdiff < 0) StartCoroutine(anims.TakeDamage(ally));
         var ratio = ((float)ally.Health) / ally.MaxHealth;
         var bardiff = ratio - lastAllyHealthBar; // scale.x diff
         var frames = Math.Abs(bardiff) * updateSpeed;

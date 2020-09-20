@@ -38,7 +38,10 @@ public class Move
     public Targeting Targeting { get { return Skeleton.targeting; } }
     public int MaxPoints { get { return Skeleton.points; } }
     public int Accuracy { get { return Skeleton.accuracy; } }
-    public int Power { get { return Skeleton.power; } }
+    public int Power {
+        get { return Skeleton.power; }
+        set { Skeleton.power = value;  }
+    }
 
     // use reflection to find the correct move logic
     private MoveFunctions GetFunctions(MoveLogic logic)

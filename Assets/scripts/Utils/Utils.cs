@@ -81,7 +81,7 @@ public class Utils
     /// </summary>
     public static int Limit(int min, int value, int max)
     {
-        return Math.Max(min, Math.Min(value, max));
+        return value < min ? min : value > max ? max : value;
     }
 
     /// <summary>
@@ -89,7 +89,7 @@ public class Utils
     /// </summary>
     public static float Limit(float min, float value, float max)
     {
-        return Math.Max(min, Math.Min(value, max));
+        return value < min ? min : value > max ? max : value;
     }
 
     /// <summary>
@@ -181,6 +181,15 @@ public class Utils
     }
 
     /// <summary>
+    /// Waits for a condition to be true, which can be passed as a lambda.
+    /// </summary>
+    public static IEnumerator Await(Func<bool> condition)
+    {
+        while (!condition.Invoke())
+            yield return null;
+    }
+
+    /// <summary>
     /// Checks if a given grid position is part of a layer.
     /// </summary>
     public static bool PositionIsLayer(Vector3 position, LayerMask layer)
@@ -194,6 +203,24 @@ public class Utils
     public static Vector2 MakeVector2(Vector3 vector)
     {
         return new Vector2(vector.x, vector.y);
+    }
+
+    /// <summary>
+    /// Checks if two floats are equal, accepting an error margin.
+    /// </summary>
+    public static bool CompareFloats(float a, float b, float delta)
+    {
+        return a >= b - delta && a <= b + delta;
+    }
+
+    /// <summary>
+    /// Prints to the debug console.
+    /// </summary>
+    public static void Log(params object[] objects)
+    {
+        string message = "";
+        foreach (var obj in objects) message += (obj == null ? "<null>" : obj.ToString()) + " ";
+        Debug.Log(message);
     }
 
     /// <summary>

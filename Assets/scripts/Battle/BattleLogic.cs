@@ -60,6 +60,8 @@ public class BattleLogic
     public List<Pokemon> ActiveEnemies { get; set; }
     public Weather Weather { get; set; }
     public Outcome Outcome { get; set; }
+    public bool? Confirmation { get; set; }
+    public int? MoveLearningSelection { get; set; }
     public BattleAnimations Animations { get; set; }
 
     public BattleLogic(IBattle battle, BattleInfo info, BattleAnimations anims)
@@ -117,8 +119,8 @@ public class BattleLogic
     {
         return effectQueue.Any(
             cmd => cmd != null && 
-            cmd.Effect.Name == effect.Name && 
-            cmd.User == user && 
+            cmd.Effect.Logic == effect.Logic && 
+            (user == null || cmd.User == user) && 
             (target == null || cmd.Target == target)
         );
     }
@@ -128,14 +130,24 @@ public class BattleLogic
         return EffectExists(new Effect(logic), user, target);
     }
 
-    public bool EffectExists(Effect effect, Pokemon user)
+    public bool EffectExistsOnUser(Effect effect, Pokemon user)
     {
         return EffectExists(effect, user, null);
     }
 
-    public bool EffectExists(EffectLogic logic, Pokemon user)
+    public bool EffectExistsOnUser(EffectLogic logic, Pokemon user)
     {
         return EffectExists(new Effect(logic), user, null);
+    }
+
+    public bool EffectExistsOnTarget(Effect effect, Pokemon target)
+    {
+        return EffectExists(effect, null, target);
+    }
+
+    public bool EffectExistsOnTarget(EffectLogic logic, Pokemon target)
+    {
+        return EffectExists(new Effect(logic), null, target);
     }
 
     public void TryEscape() //todo
@@ -295,6 +307,7 @@ public class BattleLogic
                 // 0 max points = infinite max points
                 if (move.MaxPoints > 0) move.Points--;
                 yield return Print($"{user.Name} used {move.Name}!");
+                yield return user.Ability.Functions.OnMoveUse(user.Ability, user, move, battleUI);
 
                 // based on move targeting, apply move to all targets
                 var targetList = GetMoveTargets(moveQueue[i]);
@@ -328,6 +341,7 @@ public class BattleLogic
                     }
                 }
 
+                yield return user.Ability.Functions.AfterMoveUse(user.Ability, user, move, battleUI);
                 yield return CheckDeath(order);
                 yield return battleUI.NotifyUpdateHealth();
 
@@ -374,9 +388,9 @@ public class BattleLogic
     /// <summary>
     /// Prints to the battle's chatbox.
     /// </summary>
-    private IEnumerator Print(string message)
+    private IEnumerator Print(string message, bool delay = true)
     {
-        yield return battleUI.Print(message);
+        yield return battleUI.Print(message, delay);
     }
 
     private void PlayEffectivenessSound(Move move, Pokemon target)
@@ -409,12 +423,19 @@ public class BattleLogic
         for (var i = 0; i < effectQueue.Count; i++)
         {
             var effectCommand = effectQueue[i];
-            if (effectCommand != null && effectCommand.Effect.Trigger == Trigger.OnSwitchOut)
+            if (effectCommand == null) continue;
+
+            // run life cycle method
+            if (effectCommand.Target == cmd.SwitchedOut)
+                effectCommand.Effect.Functions.OnSwitchOut(effectCommand.Effect, effectCommand.User, effectCommand.Target, battleUI);
+
+            // run OnSwitchOut triggers
+            if (effectCommand.Effect.Trigger == Trigger.OnSwitchOut && effectCommand.Target == cmd.SwitchedOut)
             {
                 // first apply the effect
-                yield return ApplyEffect(effectCommand, i, order, cmd.SwitchedOut);
+                yield return ApplyEffect(effectCommand, i, order);
                 // remove whatever should be removed on switching out
-                if (effectCommand.Effect.EndOnSwitch && effectCommand.Target == cmd.SwitchedOut)
+                if (effectCommand.Effect.EndOnSwitch)
                     effectQueue[i] = null;
             }
         }
@@ -584,11 +605,56 @@ public class BattleLogic
                 yield return battleUI.NotifyUpdateHealth(true);
             }
             battleUI.PlayLevelUpSound();
-            yield return Print($"{receiver.Name} reached level {receiver.Level}!");   
+            yield return Print($"{receiver.Name} reached level {receiver.Level}!");
+            yield return HandleMoveLearning(receiver);
         }
 
         if (ActiveAllies.Contains(receiver))
             yield return battleUI.NotifyUpdateExp(false);
+    }
+
+    private IEnumerator HandleMoveLearning(Pokemon learner)
+    {
+        foreach (var moveSkeleton in learner.NewMovesFromLevelUp())
+        {
+            // clear the flags
+            Confirmation = null;
+            MoveLearningSelection = null;
+
+            // there's room, automatically learn
+            var usedSlots = learner.GetFilledMoveSlots();
+            if (usedSlots < 4)
+            {
+                learner.Moves[usedSlots] = new Move(moveSkeleton);
+                yield return Print($"{learner.Name} learned {moveSkeleton.moveName}!");
+                continue;
+            }
+
+            // no room, replace a move
+            yield return Print($"{learner.Name} is trying to learn {moveSkeleton.moveName}.");
+            yield return Print("Should it do so?", false);
+
+            battleUI.RequestConfirmationBox();
+            yield return Await(() => Confirmation != null);
+            
+            if (Confirmation == false) // rejected learning move
+                continue;
+
+            yield return Print("Which move should be replaced?");
+            battleUI.RequestMoveReplacement(learner);
+            yield return Await(() => MoveLearningSelection != null);
+            battleUI.GoIdle();
+
+            if (MoveLearningSelection < 0) // rejected learning move
+            {
+                yield return Print($"{learner.Name} did not learn {moveSkeleton.moveName}.");
+                continue;
+            }
+
+            learner.Moves[MoveLearningSelection.Value] = new Move(moveSkeleton);
+            yield return Print($"{learner.Name} learned {moveSkeleton.moveName}!");
+            if (ActiveAllies.Contains(learner)) battleUI.RefreshMoves(learner);
+        }
     }
     
     private string WeatherToString()

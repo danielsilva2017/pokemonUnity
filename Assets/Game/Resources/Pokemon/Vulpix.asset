@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 177d2a6b275cce74d93b3872cf06afef, type: 3}
+  m_Name: Vulpix
+  m_EditorClassIdentifier: 
+  pokemonName: Vulpix
+  dexNumber: 37
+  icon: {fileID: 21300000, guid: 78e5992631892104c9b01e7d1422d34d, type: 3}
+  primaryType: 3
+  secondaryType: 12
+  hpStat: 38
+  atkStat: 41
+  defStat: 40
+  spAtkStat: 50
+  spDefStat: 65
+  spdStat: 65
+  expGroup: 2
+  catchRate: 190
+  expStat: 60
+  maleChance: 25
+  cry: {fileID: 8300000, guid: 9b3e1336a22450042ae08fff581ff7ea, type: 3}
+  learnableAbilities:
+  - {fileID: 11400000, guid: ed31c51450bda3a43b09acba758aebfb, type: 2}
+  learnableMoves:
+  - skeleton: {fileID: 11400000, guid: 2404ff190a51bde4693561c0900ea5e3, type: 2}
+    level: 0

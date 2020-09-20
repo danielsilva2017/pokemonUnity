@@ -5,7 +5,7 @@ using static Utils;
 
 public enum BattleState
 {
-    Intro, TurnHappening, SelectingAction, SelectingMove, Idle
+    Intro, TurnHappening, SelectingAction, SelectingMove, Idle, Confirming, SelectingReplacedMove
 }
 
 /// <summary>
@@ -46,6 +46,10 @@ public interface IBattle
     /// </summary>
     IEnumerator RegisterSwitch(Pokemon switchedIn);
     void SwitchUpdateUI(Pokemon switchedIn);
+    void RequestConfirmationBox();
+    void RequestMoveReplacement(Pokemon learner);
+    void GoIdle();
+    void RefreshMoves(Pokemon ally);
 
     BattleLogic Logic { get; }
     IDialog Chatbox { get; }

@@ -9,11 +9,13 @@ using System;
 public class Effect
 {
     public EffectFunctions Functions { get; set; }
+    public EffectLogic Logic { get; set; }
     public int Turn { get; set; }
 
     public Effect(EffectLogic logic)
     {
         Functions = GetFunctions(logic);
+        Logic = logic;
         Turn = 1;
     }
 

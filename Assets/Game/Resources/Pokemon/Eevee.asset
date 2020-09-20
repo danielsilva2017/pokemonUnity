@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 177d2a6b275cce74d93b3872cf06afef, type: 3}
+  m_Name: Eevee
+  m_EditorClassIdentifier: 
+  pokemonName: Eevee
+  dexNumber: 133
+  icon: {fileID: 21300000, guid: b466510f3407c3e45ba2126769c923ec, type: 3}
+  primaryType: 0
+  secondaryType: 12
+  hpStat: 55
+  atkStat: 55
+  defStat: 50
+  spAtkStat: 45
+  spDefStat: 65
+  spdStat: 55
+  expGroup: 2
+  catchRate: 45
+  expStat: 65
+  maleChance: 87.5
+  cry: {fileID: 8300000, guid: c0b3d99db501e4c43b6c75b515e6f5fc, type: 3}
+  learnableAbilities:
+  - {fileID: 11400000, guid: 58d5862666e786f4e8fbd245776d9382, type: 2}
+  learnableMoves:
+  - skeleton: {fileID: 11400000, guid: 2404ff190a51bde4693561c0900ea5e3, type: 2}
+    level: 0
+  - skeleton: {fileID: 11400000, guid: 4e039cda0cf8d4c438de995d420e27d8, type: 2}
+    level: 0
+  - skeleton: {fileID: 11400000, guid: 26af9c37e47593c44a52eb5a0b30c1bd, type: 2}
+    level: 0
+  - skeleton: {fileID: 11400000, guid: 001871ed496000d4795de249fbbab0c0, type: 2}
+    level: 0

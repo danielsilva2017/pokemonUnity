@@ -160,11 +160,9 @@ public class PlayerLogic : MonoBehaviour
         }
 
         transform.position = target;
+
         IsMoving = false;
         IsJumping = false;
-
-        //var xx = Physics2D.Raycast(transform.position, Vector2.right);
-        //Debug.Log(xx.collider);
 
         foreach (var npc in overworld.characters)
             npc.NotifyPlayerMoved();

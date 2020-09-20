@@ -7,6 +7,7 @@ using static Utils;
 public abstract class NPC : MonoBehaviour
 {
     public OverworldDialog chatbox;
+    public BoxCollider2D boxCollider2D;
 
     public string Name { get; set; }
     protected PlayerLogic PlayerLogic { get; set; }
@@ -25,6 +26,8 @@ public abstract class NPC : MonoBehaviour
     private int dialogueIndex;
     private readonly Direction[] directions = { Direction.Up, Direction.Down, Direction.Left, Direction.Right };
 
+    public int OverworldNpcID { get; set; }
+    public Overworld Overworld { get; set; }
     public bool IsDefeated { get; set; }
     public bool IsBusy { get; set; }
     public bool IsMoving { get; set; }
@@ -120,6 +123,7 @@ public abstract class NPC : MonoBehaviour
         }
 
         transform.position = target;
+        UpdateSpriteZIndex();
         IsMoving = false;
         IsBusy = false;
         Animator.SetBool("isMoving", IsMoving);
@@ -152,7 +156,7 @@ public abstract class NPC : MonoBehaviour
     {
         IsIdling = true;
 
-        if (RoamRadius > 0)
+        if (RoamRadius > 0 && !PlayerLogic.IsBusy && PlayerLogic.IsInteractionFinished)
         {
             IsBusy = true;
             var randomDirection = RandomElement(directions);
@@ -161,9 +165,10 @@ public abstract class NPC : MonoBehaviour
             var xdiff = Math.Abs(OriginalPosition.x - target.x);
             var ydiff = Math.Abs(OriginalPosition.y - target.y);
 
-            if (xdiff <= RoamRadius && ydiff <= RoamRadius && IsWalkable(target))
+            if (xdiff <= RoamRadius && ydiff <= RoamRadius && IsWalkable(target) && !Overworld.IsTileClaimed(target))
             {
-                Direction = randomDirection; 
+                Direction = randomDirection;
+                Overworld.ClaimTile(this, target);
                 yield return Move(target);
             }
 
@@ -173,6 +178,16 @@ public abstract class NPC : MonoBehaviour
         }
 
         IsIdling = false;
+    }
+
+    protected void UpdateSpriteZIndex()
+    {
+        var player = PlayerLogic.transform.position;
+        transform.position = new Vector3(
+            transform.position.x,
+            transform.position.y,
+            player.y > transform.position.y ? player.z - 1 : player.z + 1
+        );
     }
 
     protected virtual bool IsWalkable(Vector3 target)

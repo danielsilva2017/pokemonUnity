@@ -6,7 +6,7 @@ using static Utils;
 [System.Serializable]
 public class WildPokemon
 {
-    public string speciesName;
+    public PokemonBase species;
     public int minLevel;
     public int maxLevel;
     public int weight;
@@ -31,15 +31,23 @@ public class Overworld : MonoBehaviour
     private WildEncounterGenerator grassEncounter;
     private WildEncounterGenerator surfEncounter;
     private WildEncounterGenerator fishingEncounter;
+    private Vector2[] npcWalkingPositions; // to prevent multiple npcs from walking onto the same tile
 
     // Start is called before the first frame update
     void Start()
     {
         var overworldInfo = SceneInfo.GetOverworldInfo(locationName);
+        npcWalkingPositions = new Vector2[characters.Count];
 
         // load a saved state if any exists
         if (overworldInfo != null)
             LoadState(overworldInfo);
+
+        for (var i = 0; i < characters.Count; i++)
+        {
+            characters[i].OverworldNpcID = i;
+            characters[i].Overworld = this;
+        }
 
         // set up wild pokemon chances
         if (grassWildPokemon != null) grassEncounter = new WildEncounterGenerator(grassWildPokemon);
@@ -69,6 +77,22 @@ public class Overworld : MonoBehaviour
         SceneInfo.DeleteOverworldInfo(locationName);
     }
 
+    public void ClaimTile(NPC npc, Vector2 position)
+    {
+        npcWalkingPositions[npc.OverworldNpcID] = position;
+    }
+
+    public bool IsTileClaimed(Vector2 position)
+    {
+        foreach (var tile in npcWalkingPositions)
+        {
+            if (CompareFloats(tile.x, position.x, 0.02f) && CompareFloats(tile.y, position.y, 0.02f))
+                return true;
+        }
+
+        return false;
+    }
+
     public Pokemon GenerateGrassEncounter() { return grassEncounter.Generate(); }
     public Pokemon GenerateSurfEncounter() { return surfEncounter.Generate(); }
     public Pokemon GenerateFishingEncounter() { return fishingEncounter.Generate(); }
@@ -76,20 +100,17 @@ public class Overworld : MonoBehaviour
     public class WildEncounterGenerator
     {
         private readonly WildPokemon[] entries;
-        private readonly PokemonBase[] skeletons;
         private readonly int[] thresholds;
         private readonly int total;
 
         public WildEncounterGenerator(WildPokemon[] wildPokemons)
         {
             entries = wildPokemons;
-            skeletons = new PokemonBase[wildPokemons.Length];
             thresholds = new int[wildPokemons.Length];
             var threshold = 0;
 
             for (var i = 0; i < wildPokemons.Length; i++)
             {
-                skeletons[i] = Resources.Load<PokemonBase>($"Pokemon/{wildPokemons[i].speciesName}");
                 thresholds[i] = threshold;
                 threshold += wildPokemons[i].weight;
             }
@@ -104,7 +125,7 @@ public class Overworld : MonoBehaviour
             while (index + 1 < thresholds.Length && roll > thresholds[index + 1])
                 index++;
             return new Pokemon(
-                skeletons[index],
+                entries[index].species,
                 RandomInt(entries[index].minLevel, entries[index].maxLevel)
             );
         }

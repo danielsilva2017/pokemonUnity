@@ -12,12 +12,13 @@ public class Player
 
     public Player()
     {
-        Name = "the boss man";
+        Name = "Player";
         Pokemons = new List<Pokemon>()
         {
-            CreatePokemon("Bulbasaur", 14),
+            CreatePokemon("Bulbasaur", 5),
             CreatePokemon("Snorlax", 12)
         };
+        Pokemons[0].Experience = Pokemons[0].NextLevelExp - 1;
         Pokemons[1].Health = 44;
         Bag = new Bag();
     }

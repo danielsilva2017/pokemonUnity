@@ -29,11 +29,22 @@ MonoBehaviour:
   maleChance: 87.5
   cry: {fileID: 8300000, guid: 647390786ca02654ba5dfc59a46fa6e1, type: 3}
   learnableAbilities:
-  - {fileID: 11400000, guid: ed31c51450bda3a43b09acba758aebfb, type: 2}
+  - {fileID: 11400000, guid: 49383a69d739987479c47bc34ddebb11, type: 2}
+  - {fileID: 11400000, guid: 1ad8ec564ce3506449fffdb7f063a1c4, type: 2}
   learnableMoves:
-  - skeleton: {fileID: 11400000, guid: eb5a008d73d9aab48879ca306f18b460, type: 2}
-    level: 10
-  - skeleton: {fileID: 11400000, guid: 64bb3c1765befcd4a861f188b7343072, type: 2}
-    level: 4
   - skeleton: {fileID: 11400000, guid: 2404ff190a51bde4693561c0900ea5e3, type: 2}
-    level: 4
+    level: 1
+  - skeleton: {fileID: 11400000, guid: 4e039cda0cf8d4c438de995d420e27d8, type: 2}
+    level: 1
+  - skeleton: {fileID: 11400000, guid: 64bb3c1765befcd4a861f188b7343072, type: 2}
+    level: 3
+  - skeleton: {fileID: 11400000, guid: d9e095f2a4ce01e4fae9fbf9e5ab4a34, type: 2}
+    level: 6
+  - skeleton: {fileID: 11400000, guid: 36efb10b89460f24c9792318c59a8297, type: 2}
+    level: 9
+  - skeleton: {fileID: 11400000, guid: 53b99528907a64b42b1161ef93c908af, type: 2}
+    level: 12
+  - skeleton: {fileID: 11400000, guid: 2f13882e6f52bb7488bf09171c77ef1d, type: 2}
+    level: 15
+  - skeleton: {fileID: 11400000, guid: 5e2580e2471a2ed4aa92c803413201c9, type: 2}
+    level: 15

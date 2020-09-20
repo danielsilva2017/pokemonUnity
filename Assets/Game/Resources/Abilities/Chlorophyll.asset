@@ -1,0 +1,17 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6a51c7b0f90d27647b0b4893f4c18628, type: 3}
+  m_Name: Chlorophyll
+  m_EditorClassIdentifier: 
+  abilityName: Chlorophyll
+  description: "Boosts the Pok\xE9mon's Speed in sunshine."
+  logic: 4

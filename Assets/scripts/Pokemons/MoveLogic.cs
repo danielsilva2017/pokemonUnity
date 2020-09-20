@@ -36,7 +36,8 @@ public abstract class MoveFunctions
 /// </summary>
 public enum MoveLogic
 {
-    Struggle, Scratch, Tackle, VineWhip, BlazeKick, Blizzard, Ember
+    Struggle, Scratch, Tackle, VineWhip, BlazeKick, Blizzard, Ember, Growl, TailWhip, SandAttack, Growth, RazorLeaf, PoisonPowder, SleepPowder, StunSpore,
+    LeechSeed
 }
 
 /// <summary>
@@ -137,5 +138,108 @@ public class Ember : MoveFunctions
 
         if (target.Status == Status.None && Chance(10))
             yield return battle.Logic.AddEffect(EffectLogic.Burn, user, target);
+    }
+}
+
+public class Growl : MoveFunctions
+{
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
+    {
+        target.AttackStage--;
+        yield return battle.Print($"{target.Name}'s attack fell!");
+    }
+}
+
+public class TailWhip : MoveFunctions
+{
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
+    {
+        target.DefenseStage--;
+        yield return battle.Print($"{target.Name}'s defense fell!");
+    }
+}
+
+public class SandAttack : MoveFunctions
+{
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
+    {
+        target.AccuracyStage--;
+        yield return battle.Print($"{target.Name}'s accuracy fell!");
+    }
+}
+
+public class Growth : MoveFunctions
+{
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
+    {
+        if (battle.Logic.Weather == Weather.Sunny)
+        {
+            user.AttackStage += 2;
+            user.SpAttackStage += 2;
+            yield return battle.Print($"{user.Name} grew much stronger!");
+        }
+        else
+        {
+            user.AttackStage++;
+            user.SpAttackStage++;
+            yield return battle.Print($"{user.Name} grew stronger!");
+        }
+    }
+}
+
+public class RazorLeaf : MoveFunctions
+{
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
+    {
+        user.CritStage += 2;
+        target.Health -= CalcDamage(move, user, target, battle, targetCount);
+        user.CritStage -= 2;
+        yield break;
+    }
+}
+
+public class PoisonPowder : MoveFunctions
+{
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
+    {
+        if (target.Status == Status.None && !target.IsType(Type.Grass) && !target.IsType(Type.Poison) && !target.IsType(Type.Steel))
+            yield return battle.Logic.AddEffect(EffectLogic.Poison, user, target);
+        else
+            yield return battle.Print("But it failed!");
+    }
+}
+
+public class SleepPowder : MoveFunctions
+{
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
+    {
+        if (target.Status == Status.None && !target.IsType(Type.Grass))
+            yield return battle.Logic.AddEffect(EffectLogic.Sleep, user, target);
+        else
+            yield return battle.Print("But it failed!");
+    }
+}
+
+public class StunSpore : MoveFunctions
+{
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
+    {
+        if (target.Status == Status.None && !target.IsType(Type.Grass) && !target.IsType(Type.Electric))
+            yield return battle.Logic.AddEffect(EffectLogic.Paralysis, user, target);
+        else
+            yield return battle.Print("But it failed!");
+    }
+}
+
+public class LeechSeed : MoveFunctions
+{
+    public override IEnumerator Execute(Move move, Pokemon user, Pokemon target, IBattle battle, int targetCount)
+    {
+        if (!battle.Logic.EffectExistsOnTarget(EffectLogic.LeechSeeded, target) && !target.IsType(Type.Grass))
+        {
+            yield return battle.Logic.AddEffect(EffectLogic.LeechSeeded, user, target);
+        }
+        else
+            yield return battle.Print("But it failed!");
     }
 }

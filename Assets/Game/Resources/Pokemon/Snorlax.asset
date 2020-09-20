@@ -16,7 +16,7 @@ MonoBehaviour:
   dexNumber: 143
   icon: {fileID: 21300000, guid: 2bfb410f0f371b14fbf4bfee25dbc51a, type: 3}
   primaryType: 0
-  secondaryType: 10
+  secondaryType: 12
   hpStat: 160
   atkStat: 110
   defStat: 65

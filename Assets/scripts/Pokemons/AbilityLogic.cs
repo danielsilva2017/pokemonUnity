@@ -29,6 +29,14 @@ public abstract class AbilityFunctions
     /// </summary>
     public virtual IEnumerator OnDeath(Ability ability, Pokemon user, IBattle battle) { yield break; }
     /// <summary>
+    /// (Optional) On user dying.
+    /// </summary>
+    public virtual IEnumerator OnMoveUse(Ability ability, Pokemon user, Move move, IBattle battle) { yield break; }
+    /// <summary>
+    /// (Optional) On user dying.
+    /// </summary>
+    public virtual IEnumerator AfterMoveUse(Ability ability, Pokemon user, Move move, IBattle battle) { yield break; }
+    /// <summary>
     /// (Optional) When ability is used in the overworld.
     /// </summary>
     public virtual IEnumerator OnOverworld() { yield break; }
@@ -39,7 +47,7 @@ public abstract class AbilityFunctions
 /// </summary>
 public enum AbilityLogic
 {
-    Intimidate, SpeedBoost
+    Intimidate, SpeedBoost, None, Overgrow, Chlorophyll
 }
 
 public class Intimidate : AbilityFunctions
@@ -61,5 +69,49 @@ public class SpeedBoost : AbilityFunctions
     {
         user.SpeedStage++;
         yield return battle.Print($"{user.Name}'s speed rose!");
+    }
+}
+
+public class None : AbilityFunctions { }
+
+public class Overgrow : AbilityFunctions
+{
+    int originalPower;
+
+    public override IEnumerator OnMoveUse(Ability ability, Pokemon user, Move move, IBattle battle)
+    {
+        originalPower = move.Power;
+
+        if (user.Health <= (user.MaxHealth * 0.33f) && move.Type == Type.Grass)
+            move.Power = Mathf.FloorToInt(move.Power * 1.5f);
+
+        yield break;
+    }
+
+    public override IEnumerator AfterMoveUse(Ability ability, Pokemon user, Move move, IBattle battle)
+    {
+        move.Power = originalPower;
+        yield break;
+    }
+}
+
+public class Chlorophyll : AbilityFunctions
+{
+    bool boosted;
+
+    public override IEnumerator OnTurnBeginning(Ability ability, Pokemon user, IBattle battle)
+    {
+        if (!boosted && battle.Logic.Weather == Weather.Sunny)
+        {
+            boosted = true;
+            user.SpeedStage += 2;
+        }
+        else if (boosted && battle.Logic.Weather != Weather.Sunny)
+        {
+            boosted = false;
+            user.SpeedStage -= 2;
+        }
+
+        yield break;
     }
 }
