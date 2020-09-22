@@ -34,9 +34,9 @@ public class SingleBattle : MonoBehaviour, IBattle
     private int forcedSwitchIndex;
     private bool isForcedSwitch;
     private List<Pokemon> order;
-    private List<SwitchCommand> switchQueue; // some elements may be null
-    private List<MoveCommand> moveQueue; // some elements may be null
-    private List<ItemCommand> itemQueue; // some elements may be null
+    private Dictionary<Pokemon, SwitchCommand> pendingSwitches;
+    private Dictionary<Pokemon, MoveCommand> pendingMoves;
+    private Dictionary<Pokemon, bool> usedItems;
 
     public BattleState BattleState { get; set; }
     public BattleLogic Logic { get; private set; }
@@ -60,9 +60,9 @@ public class SingleBattle : MonoBehaviour, IBattle
         // Logic setup
         EnsureAllLeadingPokemonAlive(BattleInfo);
         Logic = new BattleLogic(this, BattleInfo, anims);
-        moveQueue = new List<MoveCommand>();
-        switchQueue = new List<SwitchCommand>();
-        itemQueue = new List<ItemCommand>();
+        pendingMoves = new Dictionary<Pokemon, MoveCommand>();
+        pendingSwitches = new Dictionary<Pokemon, SwitchCommand>();
+        usedItems = new Dictionary<Pokemon, bool>();
         order = Logic.SortBySpeed();
 
         // UI setup
@@ -204,9 +204,9 @@ public class SingleBattle : MonoBehaviour, IBattle
             case Outcome.Undecided:
                 orderIndex = 0;
                 forcedSwitchIndex = 0;
-                moveQueue = new List<MoveCommand>();
-                switchQueue = new List<SwitchCommand>();
-                itemQueue = new List<ItemCommand>();
+                pendingMoves = new Dictionary<Pokemon, MoveCommand>();
+                pendingSwitches = new Dictionary<Pokemon, SwitchCommand>();
+                usedItems = new Dictionary<Pokemon, bool>();
                 StartCoroutine(PerformForcedSwitches());
                 break;
             case Outcome.Win:
@@ -414,7 +414,7 @@ public class SingleBattle : MonoBehaviour, IBattle
         if (item == null) // cancelled
             BeginPlayerAction();
         else if (item.Usage == ItemUsage.TargetsAlly) // already used, done
-            AddEmptyCommand();
+            AddItemCommand();
         else // going to use
             StartCoroutine(UseItemOnEnemy(item));
     }
@@ -444,7 +444,7 @@ public class SingleBattle : MonoBehaviour, IBattle
         yield return bag.ItemToUse.Functions.OnUse(bag.ItemToUse, target, chatbox, anims);
 
         bag.ItemToUse = null;
-        AddEmptyCommand();
+        AddItemCommand();
     }
 
     /// <summary>
@@ -452,9 +452,7 @@ public class SingleBattle : MonoBehaviour, IBattle
     /// </summary>
     public void AddSwitchCommand(Pokemon switchedIn)
     {
-        switchQueue.Add(new SwitchCommand(switchedIn, order[orderIndex]));
-        moveQueue.Add(null);
-        itemQueue.Add(null);
+        pendingSwitches[order[orderIndex]] = new SwitchCommand(switchedIn, order[orderIndex]);
         MoveToNextInOrder();
     }
 
@@ -463,9 +461,7 @@ public class SingleBattle : MonoBehaviour, IBattle
     /// </summary>
     public void AddMoveCommand(Move move, Pokemon target)
     {
-        moveQueue.Add(new MoveCommand(move, order[orderIndex], target));
-        switchQueue.Add(null);
-        itemQueue.Add(null);
+        pendingMoves[order[orderIndex]] = new MoveCommand(move, order[orderIndex], target);
         MoveToNextInOrder();
     }
 
@@ -474,38 +470,16 @@ public class SingleBattle : MonoBehaviour, IBattle
     /// </summary>
     public void AddMoveCommand(Move move)
     {
-        moveQueue.Add(new MoveCommand(move, order[orderIndex]));
-        switchQueue.Add(null);
-        itemQueue.Add(null);
+        pendingMoves[order[orderIndex]] = new MoveCommand(move, order[orderIndex]);
         MoveToNextInOrder();
     }
 
     /// <summary>
-    /// This Pokemon will use an item.
+    /// This Pokemon spent its turn using an item.
     /// </summary>
-   /* public void AddItemCommand(Item item)
+    public void AddItemCommand()
     {
-        itemQueue.Add(new ItemCommand(item, order[orderIndex]));
-        moveQueue.Add(null);
-        switchQueue.Add(null);
-        MoveToNextInOrder();
-    }
-
-    /// <summary>
-    /// This Pokemon will use an item on itself.
-    /// </summary>
-    public void AddItemCommand(Item item, Pokemon target)
-    {
-        itemQueue.Add(new ItemCommand(item, target));
-        moveQueue.Add(null);
-        switchQueue.Add(null);
-        MoveToNextInOrder();
-    }*/
-
-    public void AddEmptyCommand()
-    {
-        moveQueue.Add(null);
-        switchQueue.Add(null);
+        usedItems[order[orderIndex]] = true;
         MoveToNextInOrder();
     }
 
@@ -514,10 +488,10 @@ public class SingleBattle : MonoBehaviour, IBattle
     /// </summary>
     public void UpdateMoveTargets(SwitchCommand cmd)
     {
-        foreach (var moveCommand in moveQueue)
+        foreach (var key in pendingMoves.Keys)
         {
-            if (moveCommand != null && moveCommand.Target == cmd.SwitchedOut)
-                moveCommand.Target = cmd.SwitchedIn;
+            if (pendingMoves[key].Target == cmd.SwitchedOut)
+                pendingMoves[key].Target = cmd.SwitchedIn;
         }
     }
 
@@ -564,7 +538,7 @@ public class SingleBattle : MonoBehaviour, IBattle
     {
         chatbox.SetState(ChatState.ChatOnly);
         BattleState = BattleState.TurnHappening;
-        StartCoroutine(Logic.Turn(moveQueue, switchQueue));
+        StartCoroutine(Logic.Turn(pendingMoves, pendingSwitches, usedItems));
     }
 
     private IEnumerator BeginSwitch()
@@ -708,7 +682,7 @@ public class SingleBattle : MonoBehaviour, IBattle
                     break;
                 case 3:
                     Logic.TryEscape();
-                    AddEmptyCommand();
+                    AddItemCommand();
                     break;
             }
         }

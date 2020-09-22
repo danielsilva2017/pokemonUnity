@@ -28,6 +28,10 @@ MonoBehaviour:
   expStat: 64
   maleChance: 87.5
   cry: {fileID: 8300000, guid: 647390786ca02654ba5dfc59a46fa6e1, type: 3}
+  levelEvolution:
+    evolution: {fileID: 11400000, guid: 465dfba30cc3f204caca4daae45b5c4e, type: 2}
+    level: 16
+  itemEvolutions: []
   learnableAbilities:
   - {fileID: 11400000, guid: 49383a69d739987479c47bc34ddebb11, type: 2}
   - {fileID: 11400000, guid: 1ad8ec564ce3506449fffdb7f063a1c4, type: 2}

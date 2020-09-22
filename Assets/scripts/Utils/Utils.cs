@@ -190,6 +190,17 @@ public class Utils
     }
 
     /// <summary>
+    /// Get a value from a dictionary, or null / default value if the supplied key doesn't correspond to any value.
+    /// </summary>
+    public static V GetValue<K,V>(Dictionary<K,V> map, K key)
+    {
+        if (!map.TryGetValue(key, out V value))
+            return default;
+        else
+            return value;
+    }
+
+    /// <summary>
     /// Checks if a given grid position is part of a layer.
     /// </summary>
     public static bool PositionIsLayer(Vector3 position, LayerMask layer)

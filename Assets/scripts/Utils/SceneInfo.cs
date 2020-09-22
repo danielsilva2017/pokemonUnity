@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
+using static Utils;
 
 public enum SceneID
 {
-    Title, Initial, StarterSelection, SingleBattle, PokeCenter, Forest1
+    Title, Initial, StarterSelection, SingleBattle, PokeCenter, Forest1, Evolution
 }
 
 /// <summary>
@@ -21,12 +22,14 @@ public static class SceneInfo
     private static IAreaBorder animatedAreaBorder;
     private static AudioSource battleMusic;
     private static Outcome? forcedOutcome;
+    private static List<PendingEvolution> pendingEvolutions;
 
     public static bool DisplayAreaHeaderOnSpawn { get; set; }
 
     static SceneInfo()
     {
         overworldInfo = new Dictionary<string, OverworldInfo>();
+        pendingEvolutions = new List<PendingEvolution>();
         DisplayAreaHeaderOnSpawn = true;
     }
 
@@ -72,11 +75,19 @@ public static class SceneInfo
     }
 
     /// <summary>
-    /// Returns to the overworld after a battle.
+    /// Returns to the overworld after a battle or handles pending evolutions if there are any.
     /// </summary>
     public static void ReturnToOverworldFromBattle()
     {
         StopBattleMusic();
+        SceneManager.LoadScene(pendingEvolutions.Count > 0 ? (int) SceneID.Evolution : playerInfo.Scene);
+    }
+
+    /// <summary>
+    /// Returns to the overworld after performing evolutions.
+    /// </summary>
+    public static void ReturnToOverworldFromEvolutions()
+    {
         SceneManager.LoadScene(playerInfo.Scene);
     }
 
@@ -136,6 +147,15 @@ public static class SceneInfo
         };
     }
 
+    public static void AddPendingEvolution(Pokemon subject, PokemonBase targetSkeleton)
+    {
+        pendingEvolutions.Add(new PendingEvolution
+        {
+            Subject = subject,
+            TargetSkeleton = targetSkeleton
+        });
+    }
+
     public static void SetForcedOutcome(Outcome outcome)
     {
         forcedOutcome = outcome;
@@ -179,10 +199,12 @@ public static class SceneInfo
 
     public static OverworldInfo GetOverworldInfo(string name)
     {
-        if (!overworldInfo.TryGetValue(name, out OverworldInfo value))
-            return null;
-        else
-            return value;
+        return GetValue(overworldInfo, name);
+    }
+
+    public static List<PendingEvolution> GetPendingEvolutions()
+    {
+        return pendingEvolutions;
     }
 
     public static Vector2? GetTargetCoordinates()
@@ -224,6 +246,11 @@ public static class SceneInfo
     {
         playerInfo = null;
     }
+
+    public static void ClearPendingEvolutions()
+    {
+        pendingEvolutions = new List<PendingEvolution>();
+    }
 }
 
 public class BattleInfo
@@ -256,4 +283,10 @@ public class PlayerInfo
 public class OverworldSceneInfo
 {
     public int EntryID { get; set; }
+}
+
+public class PendingEvolution
+{
+    public Pokemon Subject { get; set; }
+    public PokemonBase TargetSkeleton { get; set; }
 }

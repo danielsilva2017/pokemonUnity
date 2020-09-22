@@ -21,6 +21,7 @@ public class Pokemon : IComparable<Pokemon>
     public List<Pokemon> ExpCandidates { get; set; } // those who will get xp if this pokemon dies
     public Move LastHitByMove { get; set; } // last move to successfully target this pokemon
     public Pokemon LastHitByUser { get; set; } // last pokemon to successfully target this pokemon
+    public bool HasActedThisTurn { get; set; } // whether it has attacked or switched in the current turn
     public bool IsAlly { get; set; }
     public int Health {
         get { return health; }
@@ -42,6 +43,8 @@ public class Pokemon : IComparable<Pokemon>
     private int health;
     private int level;
     private int exp;
+
+    private Pokemon() { }
 
     public Pokemon(PokemonBase skeleton, int level, Gender? gender = null, Status status = Status.None, bool canAttack = true)
     {
@@ -70,6 +73,16 @@ public class Pokemon : IComparable<Pokemon>
         }
     }
 
+    /// <summary>
+    /// This method modifies the Pokemon it is called on.
+    /// </summary>
+    public void Evolve(PokemonBase targetEvolution)
+    {
+        var hpRatio = ((float) Health) / MaxHealth;
+        Skeleton = targetEvolution;
+        Health = Mathf.FloorToInt(MaxHealth * hpRatio);
+    }
+
     public bool IsType(Type type)
     {
         return PrimaryType == type || SecondaryType == type;
@@ -81,7 +94,7 @@ public class Pokemon : IComparable<Pokemon>
 
         foreach (var learnableMove in Skeleton.learnableMoves)
         {
-            if (learnableMove.level == Level)
+            if (learnableMove.level == Level && Moves.All(move => move.Skeleton.logic != learnableMove.skeleton.logic))
                 moves.Add(learnableMove.skeleton);
             else if (learnableMove.level > Level)
                 break;

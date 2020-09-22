@@ -300,7 +300,7 @@ public class OverworldParty : MonoBehaviour, ITransitionable
     {
         slot.Pokemon = pokemon;
         slot.Name.text = pokemon.Name;
-        slot.Sprite.sprite = Resources.Load<Sprite>($"Images/{GetSpriteID(pokemon)}");
+        slot.Sprite.sprite = pokemon.Skeleton.icon; //Resources.Load<Sprite>($"Images/{GetSpriteID(pokemon)}");
         slot.Level.text = $"Lv. {pokemon.Level}";
         slot.Health.text = $"{pokemon.Health}<size=5> </size>/<size=5> </size>{pokemon.MaxHealth}";
 

@@ -15,7 +15,7 @@ public class Player
         Name = "Player";
         Pokemons = new List<Pokemon>()
         {
-            CreatePokemon("Bulbasaur", 5),
+            CreatePokemon("Bulbasaur", 15),
             CreatePokemon("Snorlax", 12)
         };
         Pokemons[0].Experience = Pokemons[0].NextLevelExp - 1;
