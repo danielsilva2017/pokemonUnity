@@ -648,7 +648,7 @@ public class BattleLogic
             yield return Print($"{receiver.Name} reached level {receiver.Level}!");
             yield return HandleMoveLearning(receiver);
 
-            if (receiver.Level >= receiver.Skeleton.levelEvolution.level && !hasPendingEvolution)
+            if (receiver.Skeleton.levelEvolution != null && receiver.Level >= receiver.Skeleton.levelEvolution.level && !hasPendingEvolution)
             {
                 hasPendingEvolution = true;
                 SceneInfo.AddPendingEvolution(receiver, receiver.Skeleton.levelEvolution.evolution);

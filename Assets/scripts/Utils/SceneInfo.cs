@@ -84,9 +84,9 @@ public static class SceneInfo
     }
 
     /// <summary>
-    /// Returns to the overworld after performing evolutions.
+    /// Returns to whatever overworld the player is currently in.
     /// </summary>
-    public static void ReturnToOverworldFromEvolutions()
+    public static void ReturnToOverworld()
     {
         SceneManager.LoadScene(playerInfo.Scene);
     }

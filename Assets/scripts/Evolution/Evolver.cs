@@ -105,7 +105,7 @@ public class Evolver : MonoBehaviour
         }
 
         SceneInfo.ClearPendingEvolutions();
-        SceneInfo.ReturnToOverworldFromEvolutions();
+        SceneInfo.ReturnToOverworld();
     }
 
     private IEnumerator HandleEvolution(PendingEvolution evolution)

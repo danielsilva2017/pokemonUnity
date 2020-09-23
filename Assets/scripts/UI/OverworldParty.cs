@@ -80,7 +80,7 @@ public class OverworldParty : MonoBehaviour, ITransitionable
     public void Init()
     {
         chatbox.gameObject.SetActive(true);
-        chatbox.PrintWithSound("Select a Pokemon.", true);
+        chatbox.PrintSilent("Select a Pokemon.", true);
 
         // reset pointer
         selectionIndex = 0;
@@ -253,7 +253,7 @@ public class OverworldParty : MonoBehaviour, ITransitionable
         if (Input.GetKeyDown(KeyCode.X))
         {
             chatbox.gameObject.SetActive(false);
-            menu.SetSelectionIndex(0);
+            menu.SetSelectionIndex(1);
             playerLogic.playerUI.MenuTransition(this, menu);
             return;
         }

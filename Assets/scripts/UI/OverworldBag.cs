@@ -177,7 +177,7 @@ public class OverworldBag : MonoBehaviour, ITransitionable
         // back to menu
         if (Input.GetKeyDown(KeyCode.X))
         {
-            menu.SetSelectionIndex(1);
+            menu.SetSelectionIndex(2);
             playerLogic.playerUI.MenuTransition(this, menu);
             return;
         }
